@@ -1,0 +1,418 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-canvas: #08090d;
+  --bg-surface: #0f1118;
+  --bg-surface-elevated: #151822;
+  --bg-card: #131620;
+  --bg-card-hover: #1a1e2c;
+  --bg-input: #0a0b10;
+  --bg-input-focus: #0f111a;
+  
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-medium: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.22);
+  --border-accent: rgba(99, 102, 241, 0.4);
+  
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-faint: #475569;
+  
+  --accent-primary: #6366f1;
+  --accent-primary-hover: #4f46e5;
+  --accent-glow: rgba(99, 102, 241, 0.25);
+  
+  --accent-cyan: #06b6d4;
+  --accent-emerald: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-rose: #f43f5e;
+  --accent-purple: #a855f7;
+
+  --sidebar-width: 260px;
+  --header-height: 56px;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+}
+
+[data-theme='light'] {
+  --bg-canvas: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #f1f5f9;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8fafc;
+  --bg-input: #f1f5f9;
+  --bg-input-focus: #e2e8f0;
+  
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-medium: rgba(0, 0, 0, 0.14);
+  --border-strong: rgba(0, 0, 0, 0.24);
+  --border-accent: rgba(99, 102, 241, 0.6);
+  
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-faint: #94a3b8;
+  
+  --accent-glow: rgba(99, 102, 241, 0.15);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Smooth Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Glassmorphism & Panel Utilities */
+.glass-panel {
+  background: var(--bg-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+}
+
+.glass-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.glass-card:hover {
+  border-color: var(--border-medium);
+  background: var(--bg-card-hover);
+}
+
+/* Form Controls */
+.forge-input {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.forge-input:focus {
+  border-color: var(--border-accent);
+  background: var(--bg-input-focus);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.forge-input-mono {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
+.forge-select {
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  transition: border-color 0.15s ease;
+}
+
+.forge-select:focus {
+  border-color: var(--border-accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.forge-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  transition: all 0.15s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.forge-btn:hover:not(:disabled) {
+  background: var(--bg-card-hover);
+  border-color: var(--border-medium);
+}
+
+.forge-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.forge-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.forge-btn-primary {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  border-color: rgba(99, 102, 241, 0.6);
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(99, 102, 241, 0.25);
+}
+
+.forge-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4f46e5, #4338ca);
+  border-color: rgba(99, 102, 241, 0.9);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+}
+
+.forge-btn-danger {
+  background: rgba(244, 63, 94, 0.12);
+  border-color: rgba(244, 63, 94, 0.3);
+  color: #fb7185;
+}
+
+.forge-btn-danger:hover:not(:disabled) {
+  background: rgba(244, 63, 94, 0.2);
+  border-color: rgba(244, 63, 94, 0.5);
+  color: #ffffff;
+}
+
+.forge-btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-secondary);
+}
+
+.forge-btn-ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
+}
+
+.forge-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.method-badge-post { background: rgba(99, 102, 241, 0.16); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); }
+.method-badge-get { background: rgba(16, 185, 129, 0.16); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+.method-badge-put { background: rgba(245, 158, 11, 0.16); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+.method-badge-patch { background: rgba(168, 85, 247, 0.16); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+.method-badge-delete { background: rgba(244, 63, 94, 0.16); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }
+
+/* Ambient Background Animations (Pure CSS) */
+@keyframes ambientDrift {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.35;
+  }
+  33% {
+    transform: translate(3vw, -2vh) scale(1.04);
+    opacity: 0.45;
+  }
+  66% {
+    transform: translate(-2vw, 3vh) scale(0.97);
+    opacity: 0.38;
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.35;
+  }
+}
+
+@keyframes streamGlowPulse {
+  0%, 100% {
+    opacity: 0.4;
+    filter: blur(80px);
+  }
+  50% {
+    opacity: 0.7;
+    filter: blur(60px);
+  }
+}
+
+@keyframes requestFlow {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-10px) scale(1.02); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes errorPulse {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+.ambient-base {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.ambient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  will-change: transform, opacity;
+  animation: ambientDrift 24s ease-in-out infinite;
+}
+
+.ambient-orb-1 {
+  width: 500px;
+  height: 500px;
+  top: -100px;
+  left: 10%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.18) 0%, rgba(99, 102, 241, 0) 70%);
+}
+
+.ambient-orb-2 {
+  width: 600px;
+  height: 600px;
+  bottom: -150px;
+  right: 5%;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.12) 0%, rgba(6, 182, 212, 0) 70%);
+  animation-duration: 32s;
+  animation-delay: -10s;
+}
+
+.ambient-orb-3 {
+  width: 400px;
+  height: 400px;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, rgba(168, 85, 247, 0) 70%);
+  animation-duration: 28s;
+  animation-delay: -5s;
+}
+
+/* Visual State Modifiers */
+.ambient-state-requesting .ambient-orb {
+  animation: requestFlow 4s ease-in-out infinite;
+  opacity: 0.6;
+}
+
+.ambient-state-streaming .ambient-orb {
+  animation: streamGlowPulse 2.5s ease-in-out infinite;
+  opacity: 0.75;
+}
+
+.ambient-state-success .ambient-orb-1 {
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, rgba(16, 185, 129, 0) 70%);
+  transition: all 0.8s ease;
+}
+
+.ambient-state-error .ambient-orb-1 {
+  background: radial-gradient(circle, rgba(244, 63, 94, 0.25) 0%, rgba(244, 63, 94, 0) 70%);
+  animation: errorPulse 0.4s ease-in-out;
+  transition: all 0.5s ease;
+}
+
+/* Reduced / Disabled Motion Overrides */
+@media (prefers-reduced-motion: reduce) {
+  .ambient-orb {
+    animation: none !important;
+    transform: none !important;
+    opacity: 0.25 !important;
+  }
+}
+
+.reduced-animation .ambient-orb {
+  animation: none !important;
+  filter: blur(120px) !important;
+  opacity: 0.2 !important;
+}
+
+.disabled-animation .ambient-orb {
+  display: none !important;
+}
+
+/* Resizable Divider */
+.resizer-handle {
+  width: 6px;
+  cursor: col-resize;
+  background: transparent;
+  transition: background 0.15s ease;
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.resizer-handle:hover,
+.resizer-handle.dragging {
+  background: rgba(99, 102, 241, 0.4);
+}
+
+.resizer-handle::after {
+  content: '';
+  width: 2px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 1px;
+}
+
+/* Custom JSON Code Editor & Syntax */
+.json-keyword { color: #f43f5e; font-weight: 500; }
+.json-string { color: #34d399; }
+.json-number { color: #38bdf8; }
+.json-boolean { color: #fbbf24; }
+.json-null { color: #94a3b8; font-style: italic; }
+.json-key { color: #818cf8; font-weight: 500; }
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .workspace-layout {
+    flex-direction: column !important;
+  }
+  .resizer-handle {
+    display: none !important;
+  }
+}
