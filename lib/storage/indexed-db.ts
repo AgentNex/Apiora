@@ -244,3 +244,76 @@ export async function setSetting<T>(key: string, value: T): Promise<void> {
     console.error('Failed to set setting:', err);
   }
 }
+
+// ---------------- EXPORT / IMPORT ALL DATA (PHASE 2 HARDENING) ----------------
+
+export interface BackupDataPayload {
+  version: 1;
+  exportedAt: number;
+  history: RequestHistoryItem[];
+  savedRequests: SavedRequest[];
+  environments: Environment[];
+  settings: Record<string, any>;
+}
+
+export async function exportAllData(): Promise<string> {
+  const history = await getHistoryItems(1000);
+  const savedRequests = await getSavedRequests();
+  const environments = await getEnvironments();
+
+  const backup: BackupDataPayload = {
+    version: 1,
+    exportedAt: Date.now(),
+    history,
+    savedRequests,
+    environments,
+    settings: {
+      theme: await getSetting('theme', 'dark'),
+      timeout: await getSetting('timeout', 60),
+      animationMode: await getSetting('animationMode', 'auto')
+    }
+  };
+
+  return JSON.stringify(backup, null, 2);
+}
+
+export async function importAllData(jsonString: string): Promise<{ success: boolean; count: number; error?: string }> {
+  try {
+    const parsed = JSON.parse(jsonString);
+    if (!parsed || typeof parsed !== 'object') {
+      return { success: false, count: 0, error: 'Invalid JSON format' };
+    }
+
+    let importedCount = 0;
+
+    // Import Saved Requests
+    if (Array.isArray(parsed.savedRequests)) {
+      for (const item of parsed.savedRequests) {
+        if (item && item.id && item.name) {
+          await saveRequestItem(item);
+          importedCount++;
+        }
+      }
+    }
+
+    // Import Environments
+    if (Array.isArray(parsed.environments) && parsed.environments.length > 0) {
+      await saveEnvironments(parsed.environments);
+      importedCount += parsed.environments.length;
+    }
+
+    // Import History
+    if (Array.isArray(parsed.history)) {
+      for (const h of parsed.history) {
+        if (h && h.id && h.endpoint) {
+          await addHistoryItem(h);
+          importedCount++;
+        }
+      }
+    }
+
+    return { success: true, count: importedCount };
+  } catch (err: any) {
+    return { success: false, count: 0, error: err.message || 'Failed to parse import data' };
+  }
+}

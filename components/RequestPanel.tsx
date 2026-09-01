@@ -633,6 +633,10 @@ export function RequestPanel({
             onChangeCustomAuthHeaderKey={(key) => onChangeConfig((prev) => ({ ...prev, customAuthHeaderKey: key }))}
             customAuthQueryKey={config.customAuthQueryKey}
             onChangeCustomAuthQueryKey={(key) => onChangeConfig((prev) => ({ ...prev, customAuthQueryKey: key }))}
+            executionMode={config.executionMode || 'proxy'}
+            onChangeExecutionMode={(mode) => onChangeConfig((prev) => ({ ...prev, executionMode: mode }))}
+            retryOnFailure={config.retryOnFailure || false}
+            onChangeRetryOnFailure={(retry) => onChangeConfig((prev) => ({ ...prev, retryOnFailure: retry }))}
           />
         )}
 

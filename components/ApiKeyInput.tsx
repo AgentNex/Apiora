@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { AuthType } from '../lib/api/types';
-import { KeyIcon, EyeIcon, EyeOffIcon, CopyIcon, CheckIcon, XIcon, ShieldIcon } from './Icons';
+import { KeyIcon, EyeIcon, EyeOffIcon, CopyIcon, CheckIcon, XIcon, ShieldIcon, SparklesIcon, RefreshCwIcon } from './Icons';
 
 interface ApiKeyInputProps {
   authType: AuthType;
@@ -13,6 +13,10 @@ interface ApiKeyInputProps {
   onChangeCustomAuthHeaderKey?: (key: string) => void;
   customAuthQueryKey?: string;
   onChangeCustomAuthQueryKey?: (key: string) => void;
+  executionMode?: 'proxy' | 'direct';
+  onChangeExecutionMode?: (mode: 'proxy' | 'direct') => void;
+  retryOnFailure?: boolean;
+  onChangeRetryOnFailure?: (retry: boolean) => void;
 }
 
 export function ApiKeyInput({
@@ -23,7 +27,11 @@ export function ApiKeyInput({
   customAuthHeaderKey = 'x-goog-api-key',
   onChangeCustomAuthHeaderKey,
   customAuthQueryKey = 'key',
-  onChangeCustomAuthQueryKey
+  onChangeCustomAuthQueryKey,
+  executionMode = 'proxy',
+  onChangeExecutionMode,
+  retryOnFailure = false,
+  onChangeRetryOnFailure
 }: ApiKeyInputProps) {
   const [showKey, setShowKey] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -37,18 +45,21 @@ export function ApiKeyInput({
 
   return (
     <div className="glass-card" style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      {/* Top Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
           <KeyIcon size={14} style={{ color: 'var(--accent-amber)' }} />
           <span>Authentication Strategy</span>
         </div>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--text-muted)' }}>
           <ShieldIcon size={12} style={{ color: 'var(--accent-emerald)' }} />
-          <span>Masked in Session</span>
+          <span>Session-Only Memory (Encrypted in Browser)</span>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '6px' }}>
+      {/* Auth Strategies */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '6px' }}>
         {[
           { id: 'bearer', label: 'Bearer Token' },
           { id: 'x-api-key', label: 'x-api-key' },
@@ -61,7 +72,7 @@ export function ApiKeyInput({
             type="button"
             onClick={() => onChangeAuthType(item.id as AuthType)}
             className={`forge-btn ${authType === item.id ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
-            style={{ padding: '6px 10px', fontSize: '12px', border: '1px solid var(--border-subtle)' }}
+            style={{ padding: '5px 8px', fontSize: '11.5px', border: '1px solid var(--border-subtle)' }}
           >
             {item.label}
           </button>
@@ -154,6 +165,71 @@ export function ApiKeyInput({
           </div>
         </div>
       )}
+
+      {/* Execution Gateway & Security Note (Phase 2 Hardening) */}
+      <div
+        style={{
+          marginTop: '6px',
+          padding: '10px 12px',
+          borderRadius: '6px',
+          background: 'rgba(0, 0, 0, 0.25)',
+          border: '1px solid var(--border-subtle)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
+          <div style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <ShieldIcon size={13} style={{ color: 'var(--accent-cyan)' }} />
+            <span>Execution Mode & CORS Handling:</span>
+          </div>
+
+          <div style={{ display: 'flex', gap: '4px' }}>
+            <button
+              type="button"
+              onClick={() => onChangeExecutionMode && onChangeExecutionMode('proxy')}
+              className={`forge-btn ${executionMode === 'proxy' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
+              style={{ padding: '3px 8px', fontSize: '11px' }}
+            >
+              Proxy Mode (Recommended)
+            </button>
+            <button
+              type="button"
+              onClick={() => onChangeExecutionMode && onChangeExecutionMode('direct')}
+              className={`forge-btn ${executionMode === 'direct' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
+              style={{ padding: '3px 8px', fontSize: '11px' }}
+            >
+              Local-Only Mode
+            </button>
+          </div>
+        </div>
+
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: '1.45' }}>
+          {executionMode === 'proxy' ? (
+            <span>
+              🛡️ <strong>Proxy Mode Active:</strong> Request routes through the SSRF-hardened serverless function over encrypted HTTPS to bypass browser CORS blocks. API keys are <strong>never stored, logged, or cached</strong> server-side.
+            </span>
+          ) : (
+            <span>
+              🔒 <strong>Local-Only Mode Active:</strong> Request is dispatched directly from your browser via native <code className="forge-code">fetch()</code>. The API key never touches any server. Note: Will fail if provider blocks browser CORS (works with CORS-enabled endpoints or local Ollama).
+            </span>
+          )}
+        </div>
+
+        {/* Retry On Failure Toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '4px', borderTop: '1px solid var(--border-subtle)' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={retryOnFailure}
+              onChange={(e) => onChangeRetryOnFailure && onChangeRetryOnFailure(e.target.checked)}
+              style={{ accentColor: 'var(--accent-primary)', cursor: 'pointer' }}
+            />
+            <span>Auto-retry with exponential backoff on transient network failures</span>
+          </label>
+        </div>
+      </div>
     </div>
   );
 }

@@ -67,6 +67,8 @@ export interface ApiRequestConfig {
   isStreaming: boolean;
   timeoutSeconds: number;
   presetId?: string;
+  executionMode?: 'proxy' | 'direct';
+  retryOnFailure?: boolean;
 }
 
 export interface StreamEvent {

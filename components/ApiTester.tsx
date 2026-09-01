@@ -20,6 +20,7 @@ import { SavedRequests } from './SavedRequests';
 import { EnvironmentManager } from './EnvironmentManager';
 import { SettingsModal } from './SettingsModal';
 import { AmbientBackground } from './AmbientBackground';
+import { ErrorBoundary } from './ErrorBoundary';
 import { executeApiRequest } from '../lib/api/proxy-client';
 import {
   addHistoryItem,
@@ -484,16 +485,18 @@ export function ApiTester() {
                     minWidth: '280px'
                   }}
                 >
-                  <RequestPanel
-                    config={config}
-                    onChangeConfig={setConfig}
-                    environment={activeEnv}
-                    onApplyPreset={handleApplyPreset}
-                    onSendRequest={handleSendRequest}
-                    onStopStreaming={handleStopStreaming}
-                    isLoading={isLoading}
-                    isStreamingActive={isStreamingActive}
-                  />
+                  <ErrorBoundary fallbackTitle="Request Builder Error">
+                    <RequestPanel
+                      config={config}
+                      onChangeConfig={setConfig}
+                      environment={activeEnv}
+                      onApplyPreset={handleApplyPreset}
+                      onSendRequest={handleSendRequest}
+                      onStopStreaming={handleStopStreaming}
+                      isLoading={isLoading}
+                      isStreamingActive={isStreamingActive}
+                    />
+                  </ErrorBoundary>
                 </div>
 
                 {/* Resizer Handle */}
@@ -513,12 +516,14 @@ export function ApiTester() {
                     minWidth: '280px'
                   }}
                 >
-                  <ResponsePanel
-                    response={response}
-                    isLoading={isLoading}
-                    isStreamingActive={isStreamingActive}
-                    onStopStreaming={handleStopStreaming}
-                  />
+                  <ErrorBoundary fallbackTitle="Response Viewer Error">
+                    <ResponsePanel
+                      response={response}
+                      isLoading={isLoading}
+                      isStreamingActive={isStreamingActive}
+                      onStopStreaming={handleStopStreaming}
+                    />
+                  </ErrorBoundary>
                 </div>
               </div>
             </div>
