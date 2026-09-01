@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronDownIcon, ChevronRightIcon, CopyIcon, CheckIcon } from './Icons';
 
 interface JsonTreeViewProps {
@@ -48,11 +48,12 @@ export function JsonTreeView({ data }: JsonTreeViewProps) {
         style={{
           padding: '12px',
           overflowX: 'auto',
-          maxHeight: '500px',
+          maxHeight: '520px',
           overflowY: 'auto',
           fontFamily: 'var(--font-mono)',
           fontSize: '12px',
-          lineHeight: '1.6'
+          lineHeight: '1.6',
+          wordBreak: 'break-word'
         }}
       >
         <TreeNode
@@ -77,9 +78,16 @@ interface TreeNodeProps {
   level: number;
 }
 
+const ITEMS_PER_PAGE = 50;
+
 function TreeNode({ label, value, isLast, searchTerm, defaultExpanded, level }: TreeNodeProps) {
   const [isOpen, setIsOpen] = useState(defaultExpanded);
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setIsOpen(defaultExpanded);
+  }, [defaultExpanded]);
 
   const isObject = value !== null && typeof value === 'object';
   const isArray = Array.isArray(value);
@@ -113,16 +121,17 @@ function TreeNode({ label, value, isLast, searchTerm, defaultExpanded, level }: 
     return (
       <div
         style={{
-          paddingLeft: `${level * 16}px`,
+          paddingLeft: `${Math.min(level, 8) * 14}px`,
           background: matches ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
           borderRadius: '3px',
           display: 'flex',
-          alignItems: 'center',
-          gap: '6px'
+          alignItems: 'baseline',
+          gap: '6px',
+          flexWrap: 'wrap'
         }}
       >
         <span className="json-key">{label}:</span>
-        <span className={typeClass}>{displayVal}</span>
+        <span className={typeClass} style={{ wordBreak: 'break-all' }}>{displayVal}</span>
         {!isLast && <span style={{ color: 'var(--text-muted)' }}>,</span>}
       </div>
     );
@@ -130,9 +139,10 @@ function TreeNode({ label, value, isLast, searchTerm, defaultExpanded, level }: 
 
   const keys = Object.keys(value || {});
   const isEmpty = keys.length === 0;
+  const renderedKeys = keys.slice(0, visibleCount);
 
   return (
-    <div style={{ paddingLeft: `${level * 16}px` }}>
+    <div style={{ paddingLeft: `${Math.min(level, 8) * 14}px` }}>
       <div
         onClick={() => setIsOpen(!isOpen)}
         style={{
@@ -141,7 +151,7 @@ function TreeNode({ label, value, isLast, searchTerm, defaultExpanded, level }: 
           gap: '4px',
           cursor: 'pointer',
           userSelect: 'none',
-          padding: '1px 4px',
+          padding: '2px 4px',
           borderRadius: '4px',
           color: 'var(--text-primary)'
         }}
@@ -166,7 +176,7 @@ function TreeNode({ label, value, isLast, searchTerm, defaultExpanded, level }: 
 
       {isOpen && !isEmpty && (
         <div>
-          {keys.map((k, idx) => (
+          {renderedKeys.map((k, idx) => (
             <TreeNode
               key={k}
               label={isArray ? String(idx) : k}
@@ -177,6 +187,22 @@ function TreeNode({ label, value, isLast, searchTerm, defaultExpanded, level }: 
               level={level + 1}
             />
           ))}
+
+          {keys.length > visibleCount && (
+            <div style={{ paddingLeft: `${(level + 1) * 14}px`, margin: '4px 0' }}>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setVisibleCount((prev) => prev + ITEMS_PER_PAGE);
+                }}
+                className="forge-btn forge-btn-ghost"
+                style={{ padding: '3px 8px', fontSize: '11px', color: 'var(--accent-cyan)' }}
+              >
+                + Show {Math.min(ITEMS_PER_PAGE, keys.length - visibleCount)} more items ({keys.length - visibleCount} remaining)
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

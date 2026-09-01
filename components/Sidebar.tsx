@@ -1,14 +1,15 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import {
   CodeIcon,
   HistoryIcon,
   BookmarkIcon,
   ShieldIcon,
   SparklesIcon,
-  LayersIcon,
-  ActivityIcon
+  XIcon,
+  PlusIcon
 } from './Icons';
 import { RequestHistoryItem, SavedRequest } from '../lib/api/types';
 
@@ -20,6 +21,8 @@ interface SidebarProps {
   onSelectHistoryItem: (item: RequestHistoryItem) => void;
   onSelectSavedRequest: (saved: SavedRequest) => void;
   onNewRequest: () => void;
+  isMobileDrawerOpen?: boolean;
+  onCloseMobileDrawer?: () => void;
 }
 
 export function Sidebar({
@@ -29,40 +32,67 @@ export function Sidebar({
   savedRequests,
   onSelectHistoryItem,
   onSelectSavedRequest,
-  onNewRequest
+  onNewRequest,
+  isMobileDrawerOpen = false,
+  onCloseMobileDrawer
 }: SidebarProps) {
-  return (
-    <aside
-      style={{
-        width: 'var(--sidebar-width)',
-        background: 'var(--bg-surface)',
-        borderRight: '1px solid var(--border-subtle)',
-        display: 'flex',
-        flexDirection: 'column',
-        height: 'calc(100vh - var(--header-height))',
-        overflowY: 'auto',
-        zIndex: 10
-      }}
-    >
-      {/* Navigation section */}
+  const handleItemClick = (tab: 'playground' | 'history' | 'saved' | 'environments') => {
+    onSelectTab(tab);
+    if (onCloseMobileDrawer) onCloseMobileDrawer();
+  };
+
+  const navContent = (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
+      {/* Drawer Header (only visible on mobile drawer) */}
+      <div
+        className="md:hidden"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '14px 16px',
+          borderBottom: '1px solid var(--border-subtle)',
+          background: 'var(--bg-surface-elevated)'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '14px' }}>
+          <span>Navigation</span>
+        </div>
+        <button
+          type="button"
+          onClick={onCloseMobileDrawer}
+          className="forge-btn forge-btn-ghost"
+          style={{ padding: '6px', minHeight: '36px', minWidth: '36px' }}
+          aria-label="Close drawer"
+        >
+          <XIcon size={16} />
+        </button>
+      </div>
+
+      {/* Navigation Section */}
       <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
         <button
-          onClick={() => onSelectTab('playground')}
-          className={`forge-btn ${activeTab === 'playground' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
+          type="button"
+          onClick={() => handleItemClick('playground')}
+          className={`forge-btn ${activeTab === 'playground' ? 'forge-btn-primary' : 'forge-btn-ghost'} sidebar-item-center`}
           style={{ justifyContent: 'flex-start', width: '100%', padding: '8px 12px' }}
+          title="Playground"
         >
           <CodeIcon size={15} />
-          <span>Playground</span>
+          <span className="sidebar-label">Playground</span>
         </button>
 
         <button
-          onClick={() => onSelectTab('history')}
-          className={`forge-btn ${activeTab === 'history' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
+          type="button"
+          onClick={() => handleItemClick('history')}
+          className={`forge-btn ${activeTab === 'history' ? 'forge-btn-primary' : 'forge-btn-ghost'} sidebar-item-center`}
           style={{ justifyContent: 'flex-start', width: '100%', padding: '8px 12px' }}
+          title="Request History"
         >
           <HistoryIcon size={15} />
-          <span>History</span>
+          <span className="sidebar-label">History</span>
           <span
+            className="sidebar-label"
             style={{
               marginLeft: 'auto',
               fontSize: '11px',
@@ -76,13 +106,16 @@ export function Sidebar({
         </button>
 
         <button
-          onClick={() => onSelectTab('saved')}
-          className={`forge-btn ${activeTab === 'saved' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
+          type="button"
+          onClick={() => handleItemClick('saved')}
+          className={`forge-btn ${activeTab === 'saved' ? 'forge-btn-primary' : 'forge-btn-ghost'} sidebar-item-center`}
           style={{ justifyContent: 'flex-start', width: '100%', padding: '8px 12px' }}
+          title="Saved Collections"
         >
           <BookmarkIcon size={15} />
-          <span>Saved Collections</span>
+          <span className="sidebar-label">Saved</span>
           <span
+            className="sidebar-label"
             style={{
               marginLeft: 'auto',
               fontSize: '11px',
@@ -96,19 +129,31 @@ export function Sidebar({
         </button>
 
         <button
-          onClick={() => onSelectTab('environments')}
-          className={`forge-btn ${activeTab === 'environments' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
+          type="button"
+          onClick={() => handleItemClick('environments')}
+          className={`forge-btn ${activeTab === 'environments' ? 'forge-btn-primary' : 'forge-btn-ghost'} sidebar-item-center`}
           style={{ justifyContent: 'flex-start', width: '100%', padding: '8px 12px' }}
+          title="Environments"
         >
           <ShieldIcon size={15} />
-          <span>Environments</span>
+          <span className="sidebar-label">Environments</span>
         </button>
+
+        <Link
+          href="/docs"
+          className="forge-btn forge-btn-ghost sidebar-item-center"
+          style={{ justifyContent: 'flex-start', width: '100%', padding: '8px 12px', textDecoration: 'none', color: 'var(--accent-cyan)' }}
+          title="Documentation"
+        >
+          <SparklesIcon size={15} />
+          <span className="sidebar-label">Docs Portal</span>
+        </Link>
       </div>
 
       <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '0 12px' }} />
 
-      {/* Quick Recent History List */}
-      <div style={{ flex: 1, padding: '12px', overflowY: 'auto' }}>
+      {/* Quick Recent Activity List */}
+      <div className="sidebar-label" style={{ flex: 1, padding: '12px', overflowY: 'auto' }}>
         <div
           style={{
             fontSize: '11px',
@@ -124,7 +169,8 @@ export function Sidebar({
         >
           <span>Recent Activity</span>
           <button
-            onClick={() => onSelectTab('history')}
+            type="button"
+            onClick={() => handleItemClick('history')}
             style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', fontSize: '11px' }}
           >
             View all
@@ -144,32 +190,37 @@ export function Sidebar({
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {historyItems.slice(0, 8).map((item) => {
+            {historyItems.slice(0, 6).map((item) => {
               const isSuccess = item.status >= 200 && item.status < 300;
               const isClientError = item.status >= 400 && item.status < 500;
 
               return (
                 <div
                   key={item.id}
-                  onClick={() => onSelectHistoryItem(item)}
+                  onClick={() => {
+                    onSelectHistoryItem(item);
+                    if (onCloseMobileDrawer) onCloseMobileDrawer();
+                  }}
                   className="glass-card"
                   style={{
                     padding: '8px 10px',
                     cursor: 'pointer',
+                    fontSize: '12px',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '4px'
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span className={`forge-badge method-badge-${item.method.toLowerCase()}`} style={{ fontSize: '9.5px', padding: '1px 5px' }}>
+                    <span className={`forge-badge method-badge-${item.method.toLowerCase()}`} style={{ fontSize: '9px', padding: '1px 5px' }}>
                       {item.method}
                     </span>
                     <span
                       style={{
-                        fontSize: '10.5px',
-                        fontWeight: 600,
-                        color: isSuccess ? 'var(--accent-emerald)' : isClientError ? 'var(--accent-amber)' : 'var(--accent-rose)'
+                        fontSize: '10px',
+                        fontFamily: 'var(--font-mono)',
+                        color: isSuccess ? 'var(--accent-emerald)' : isClientError ? 'var(--accent-amber)' : 'var(--accent-rose)',
+                        fontWeight: 600
                       }}
                     >
                       {item.status || 'ERR'}
@@ -177,20 +228,15 @@ export function Sidebar({
                   </div>
                   <div
                     style={{
-                      fontSize: '11.5px',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '11px',
                       color: 'var(--text-primary)',
-                      whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      fontFamily: 'var(--font-mono)'
+                      whiteSpace: 'nowrap'
                     }}
-                    title={item.endpoint}
                   >
-                    {item.endpoint.replace(/^https?:\/\//, '')}
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-muted)' }}>
-                    <span>{item.modelId || 'generic'}</span>
-                    <span>{item.durationMs}ms</span>
+                    {item.modelId || item.endpoint}
                   </div>
                 </div>
               );
@@ -198,24 +244,36 @@ export function Sidebar({
           </div>
         )}
       </div>
+    </div>
+  );
 
-      {/* Security notice footer */}
-      <div
+  return (
+    <>
+      {/* Desktop & Tablet Sidebar */}
+      <aside
+        className="desktop-sidebar hidden md:flex"
         style={{
-          padding: '10px 12px',
-          background: 'rgba(0, 0, 0, 0.2)',
-          borderTop: '1px solid var(--border-subtle)',
-          fontSize: '11px',
-          color: 'var(--text-muted)',
-          lineHeight: '1.4'
+          width: 'var(--sidebar-width)',
+          background: 'var(--bg-surface)',
+          borderRight: '1px solid var(--border-subtle)',
+          flexDirection: 'column',
+          height: 'calc(100dvh - var(--header-height))',
+          overflowY: 'auto',
+          zIndex: 10,
+          transition: 'width 0.2s ease'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-cyan)', fontWeight: 600, marginBottom: '2px' }}>
-          <ShieldIcon size={12} />
-          <span>Local Security Policy</span>
-        </div>
-        API keys are kept in session memory by default and never stored in history logs.
+        {navContent}
+      </aside>
+
+      {/* Mobile Slide-Over Drawer */}
+      <div
+        className={`mobile-drawer-overlay md:hidden ${isMobileDrawerOpen ? 'open' : ''}`}
+        onClick={onCloseMobileDrawer}
+      />
+      <div className={`mobile-drawer-content md:hidden ${isMobileDrawerOpen ? 'open' : ''}`}>
+        {navContent}
       </div>
-    </aside>
+    </>
   );
 }

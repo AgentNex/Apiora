@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   ApiRequestConfig,
   ApiResponseData,
@@ -40,6 +40,7 @@ export function ApiTester() {
   const [activeTab, setActiveTab] = useState<'playground' | 'history' | 'saved' | 'environments'>('playground');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [animationMode, setAnimationMode] = useState<'auto' | 'full' | 'reduced' | 'disabled'>('auto');
   const [timeoutSeconds, setTimeoutSeconds] = useState(60);
   const [rememberApiKeys, setRememberApiKeys] = useState(false);
@@ -201,7 +202,7 @@ export function ApiTester() {
     setIsLoading(true);
     setUiState('requesting');
     setResponse(null);
-    setMobileActiveView('response');
+    setMobileActiveView('response'); // Automatically switch focus to response on phone
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
@@ -349,7 +350,7 @@ export function ApiTester() {
   const activeEnv = environments.find((e) => e.id === activeEnvironmentId);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', width: '100dvw', overflow: 'hidden' }}>
       {/* CSS-Only Ambient Background */}
       <AmbientBackground uiState={uiState} overrideAnimationLevel={animationMode} />
 
@@ -365,11 +366,12 @@ export function ApiTester() {
         onToggleTheme={handleToggleTheme}
         activeTab={activeTab}
         onSelectTab={setActiveTab}
+        onToggleMobileDrawer={() => setIsMobileDrawerOpen(!isMobileDrawerOpen)}
       />
 
       {/* Main Workspace Frame */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative', zIndex: 1 }}>
-        {/* Left Sidebar */}
+        {/* Sidebar (Desktop Rail / Mobile Slide-Over Drawer) */}
         <Sidebar
           activeTab={activeTab}
           onSelectTab={setActiveTab}
@@ -378,10 +380,12 @@ export function ApiTester() {
           onSelectHistoryItem={handleSelectHistoryItem}
           onSelectSavedRequest={handleSelectSavedRequest}
           onNewRequest={handleNewRequest}
+          isMobileDrawerOpen={isMobileDrawerOpen}
+          onCloseMobileDrawer={() => setIsMobileDrawerOpen(false)}
         />
 
         {/* Main Content Area */}
-        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', height: 'calc(100vh - var(--header-height))', overflow: 'hidden' }}>
+        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', height: 'calc(100dvh - var(--header-height))', overflow: 'hidden' }}>
           {activeTab === 'history' && (
             <RequestHistory
               historyItems={historyItems}
@@ -424,21 +428,13 @@ export function ApiTester() {
 
           {activeTab === 'playground' && (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-              {/* Mobile View Switcher Tabs (Only displayed on smaller viewports) */}
-              <div
-                className="lg:hidden"
-                style={{
-                  display: 'flex',
-                  borderBottom: '1px solid var(--border-subtle)',
-                  background: 'var(--bg-surface)',
-                  padding: '4px'
-                }}
-              >
+              {/* Mobile View Switcher (Segmented Control for <1024px) */}
+              <div className="mobile-view-switcher">
                 <button
                   type="button"
                   onClick={() => setMobileActiveView('request')}
                   className={`forge-btn ${mobileActiveView === 'request' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
-                  style={{ flex: 1, padding: '6px', fontSize: '12px' }}
+                  style={{ flex: 1, padding: '7px', fontSize: '12px' }}
                 >
                   Request Builder
                 </button>
@@ -446,13 +442,27 @@ export function ApiTester() {
                   type="button"
                   onClick={() => setMobileActiveView('response')}
                   className={`forge-btn ${mobileActiveView === 'response' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
-                  style={{ flex: 1, padding: '6px', fontSize: '12px' }}
+                  style={{ flex: 1, padding: '7px', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                 >
-                  Response Viewer {response && `(${response.status})`}
+                  <span>Response Viewer</span>
+                  {response && (
+                    <span
+                      style={{
+                        fontSize: '10.5px',
+                        padding: '1px 5px',
+                        borderRadius: '4px',
+                        background: response.ok ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 94, 0.2)',
+                        color: response.ok ? 'var(--accent-emerald)' : 'var(--accent-rose)',
+                        fontFamily: 'var(--font-mono)'
+                      }}
+                    >
+                      {response.status}
+                    </span>
+                  )}
                 </button>
               </div>
 
-              {/* Desktop Resizable Split Pane / Mobile Stacked Pane */}
+              {/* Desktop Resizable Split Pane / Mobile Stacked Single-View */}
               <div
                 ref={containerRef}
                 className="workspace-layout"
@@ -460,18 +470,18 @@ export function ApiTester() {
                   display: 'flex',
                   flex: 1,
                   overflow: 'hidden',
-                  padding: '10px',
+                  padding: '8px',
                   gap: '8px'
                 }}
               >
                 {/* Left: Request Panel */}
                 <div
+                  className={mobileActiveView === 'request' ? 'workspace-panel-mobile-visible' : 'workspace-panel-mobile-hidden'}
                   style={{
                     width: `${leftPanelWidthPercent}%`,
                     height: '100%',
-                    display: typeof window !== 'undefined' && window.innerWidth <= 1024 && mobileActiveView !== 'request' ? 'none' : 'flex',
                     flexDirection: 'column',
-                    minWidth: '300px'
+                    minWidth: '280px'
                   }}
                 >
                   <RequestPanel
@@ -495,12 +505,12 @@ export function ApiTester() {
 
                 {/* Right: Response Panel */}
                 <div
+                  className={mobileActiveView === 'response' ? 'workspace-panel-mobile-visible' : 'workspace-panel-mobile-hidden'}
                   style={{
                     flex: 1,
                     height: '100%',
-                    display: typeof window !== 'undefined' && window.innerWidth <= 1024 && mobileActiveView !== 'response' ? 'none' : 'flex',
                     flexDirection: 'column',
-                    minWidth: '300px'
+                    minWidth: '280px'
                   }}
                 >
                   <ResponsePanel

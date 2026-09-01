@@ -4,7 +4,16 @@ import React, { useState } from 'react';
 import { ApiResponseData } from '../lib/api/types';
 import { JsonTreeView } from './JsonTreeView';
 import { StreamViewer } from './StreamViewer';
-import { CopyIcon, CheckIcon, LayersIcon, ActivityIcon, BracesIcon, FileTextIcon, InfoIcon } from './Icons';
+import {
+  CopyIcon,
+  CheckIcon,
+  LayersIcon,
+  ActivityIcon,
+  BracesIcon,
+  FileTextIcon,
+  InfoIcon,
+  CodeIcon
+} from './Icons';
 
 interface ResponsePanelProps {
   response: ApiResponseData | null;
@@ -22,6 +31,7 @@ export function ResponsePanel({
   onStopStreaming
 }: ResponsePanelProps) {
   const [activeTab, setActiveTab] = useState<ResponseTab>('pretty');
+  const [softWrap, setSoftWrap] = useState(true);
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -50,7 +60,7 @@ export function ResponsePanel({
   if (isLoading && !response) {
     return (
       <div
-        className="glass-panel"
+        className="response-panel-container glass-panel"
         style={{
           height: '100%',
           display: 'flex',
@@ -87,7 +97,7 @@ export function ResponsePanel({
   if (!response) {
     return (
       <div
-        className="glass-panel"
+        className="response-panel-container glass-panel"
         style={{
           height: '100%',
           display: 'flex',
@@ -121,7 +131,7 @@ export function ResponsePanel({
 
   return (
     <div
-      className="glass-panel"
+      className="response-panel-container glass-panel"
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -132,7 +142,7 @@ export function ResponsePanel({
       {/* Response Header Status Bar */}
       <div
         style={{
-          padding: '12px 16px',
+          padding: '10px 14px',
           borderBottom: '1px solid var(--border-subtle)',
           display: 'flex',
           alignItems: 'center',
@@ -143,7 +153,7 @@ export function ResponsePanel({
         }}
       >
         {/* Status code & Metrics */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           <div
             style={{
               display: 'flex',
@@ -168,7 +178,7 @@ export function ResponsePanel({
             </span>
           </div>
 
-          <div style={{ display: 'flex', gap: '10px', fontSize: '12px', color: 'var(--text-muted)' }}>
+          <div style={{ display: 'flex', gap: '8px', fontSize: '11.5px', color: 'var(--text-muted)' }}>
             <span>Time: <strong style={{ color: 'var(--text-primary)' }}>{(response.durationMs / 1000).toFixed(2)}s</strong></span>
             <span>Size: <strong style={{ color: 'var(--text-primary)' }}>{(response.sizeBytes / 1024).toFixed(1)} KB</strong></span>
             {response.isStream && (
@@ -179,50 +189,57 @@ export function ResponsePanel({
           </div>
         </div>
 
-        {/* Actions (Copy, Download) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        {/* Actions (Soft Wrap, Copy, Download) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <button
+            type="button"
+            onClick={() => setSoftWrap(!softWrap)}
+            className={`forge-btn ${softWrap ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
+            style={{ padding: '3px 7px', fontSize: '11px' }}
+            title="Toggle Soft Text Wrapping (prevents horizontal scroll)"
+          >
+            Wrap
+          </button>
+
           <button
             type="button"
             onClick={handleCopy}
             className="forge-btn forge-btn-ghost"
-            style={{ padding: '4px 8px', fontSize: '12px', border: '1px solid var(--border-subtle)' }}
+            style={{ padding: '3px 8px', fontSize: '11px', border: '1px solid var(--border-subtle)' }}
             title="Copy response body"
           >
-            {copied ? <CheckIcon size={13} style={{ color: 'var(--accent-emerald)' }} /> : <CopyIcon size={13} />}
-            <span>{copied ? 'Copied!' : 'Copy'}</span>
+            {copied ? <CheckIcon size={12} style={{ color: 'var(--accent-emerald)' }} /> : <CopyIcon size={12} />}
+            <span>{copied ? 'Copied' : 'Copy'}</span>
           </button>
 
           <button
             type="button"
             onClick={handleDownload}
             className="forge-btn forge-btn-ghost"
-            style={{ padding: '4px 8px', fontSize: '12px', border: '1px solid var(--border-subtle)' }}
+            style={{ padding: '3px 8px', fontSize: '11px', border: '1px solid var(--border-subtle)' }}
             title="Download JSON file"
           >
-            Download
+            JSON
           </button>
         </div>
       </div>
 
-      {/* Tab bar */}
+      {/* Tab bar (Horizontally scrollable touch pills) */}
       <div
+        className="touch-pill-row"
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
-          padding: '6px 12px',
+          padding: '5px 10px',
           borderBottom: '1px solid var(--border-subtle)',
-          background: 'var(--bg-surface)',
-          overflowX: 'auto'
+          background: 'var(--bg-surface)'
         }}
       >
         <button
           type="button"
           onClick={() => setActiveTab('pretty')}
           className={`forge-btn ${activeTab === 'pretty' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
-          style={{ padding: '4px 10px', fontSize: '12px' }}
+          style={{ padding: '3px 9px', fontSize: '11.5px' }}
         >
-          <FileTextIcon size={13} />
+          <FileTextIcon size={12} />
           <span>Pretty / Text</span>
         </button>
 
@@ -230,10 +247,10 @@ export function ResponsePanel({
           type="button"
           onClick={() => setActiveTab('raw')}
           className={`forge-btn ${activeTab === 'raw' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
-          style={{ padding: '4px 10px', fontSize: '12px' }}
+          style={{ padding: '3px 9px', fontSize: '11.5px' }}
         >
-          <BracesIcon size={13} />
-          <span>Raw</span>
+          <BracesIcon size={12} />
+          <span>Raw Body</span>
         </button>
 
         {typeof response.data === 'object' && response.data !== null && (
@@ -241,9 +258,10 @@ export function ResponsePanel({
             type="button"
             onClick={() => setActiveTab('tree')}
             className={`forge-btn ${activeTab === 'tree' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
-            style={{ padding: '4px 10px', fontSize: '12px' }}
+            style={{ padding: '3px 9px', fontSize: '11.5px' }}
           >
-            JSON Tree
+            <CodeIcon size={12} />
+            <span>JSON Tree</span>
           </button>
         )}
 
@@ -252,9 +270,10 @@ export function ResponsePanel({
             type="button"
             onClick={() => setActiveTab('stream')}
             className={`forge-btn ${activeTab === 'stream' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
-            style={{ padding: '4px 10px', fontSize: '12px' }}
+            style={{ padding: '3px 9px', fontSize: '11.5px' }}
           >
-            Stream Live
+            <ActivityIcon size={12} />
+            <span>Live Stream ({response.chunkCount || 0})</span>
           </button>
         )}
 
@@ -262,115 +281,76 @@ export function ResponsePanel({
           type="button"
           onClick={() => setActiveTab('headers')}
           className={`forge-btn ${activeTab === 'headers' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
-          style={{ padding: '4px 10px', fontSize: '12px' }}
+          style={{ padding: '3px 9px', fontSize: '11.5px' }}
         >
-          <LayersIcon size={13} />
-          <span>Headers ({Object.keys(response.headers || {}).length})</span>
+          <LayersIcon size={12} />
+          <span>Headers ({Object.keys(response.headers).length})</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('diagnostics')}
           className={`forge-btn ${activeTab === 'diagnostics' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
-          style={{ padding: '4px 10px', fontSize: '12px' }}
+          style={{ padding: '3px 9px', fontSize: '11.5px' }}
         >
-          <InfoIcon size={13} />
+          <InfoIcon size={12} />
           <span>Diagnostics</span>
         </button>
       </div>
 
-      {/* Main View Area */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '14px' }}>
-        {/* Error Alert if failed */}
-        {response.error && (
+      {/* Main Tab Views */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
+        {/* Tab 1: Pretty View */}
+        {activeTab === 'pretty' && (
           <div
+            className="glass-card"
             style={{
-              padding: '12px 14px',
-              borderRadius: '8px',
-              background: 'rgba(244, 63, 94, 0.1)',
-              border: '1px solid rgba(244, 63, 94, 0.3)',
-              marginBottom: '14px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '4px'
+              padding: '12px',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '12.5px',
+              lineHeight: '1.6',
+              whiteSpace: softWrap ? 'pre-wrap' : 'pre',
+              wordBreak: softWrap ? 'break-word' : 'normal',
+              overflowX: 'auto',
+              minHeight: '180px'
             }}
           >
-            <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--accent-rose)' }}>
-              {response.error}
-            </div>
-            {response.errorDetails && (
-              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                {response.errorDetails}
-              </div>
-            )}
+            {typeof response.data === 'object'
+              ? JSON.stringify(response.data, null, 2)
+              : response.rawText || response.error || 'Empty Response Body'}
           </div>
         )}
 
-        {/* Tab 1: Pretty / Parsed */}
-        {activeTab === 'pretty' && (
-          <div>
-            {typeof response.data === 'object' && response.data !== null ? (
-              <pre
-                style={{
-                  background: 'var(--bg-input)',
-                  padding: '14px',
-                  borderRadius: '6px',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '12.5px',
-                  lineHeight: '1.5',
-                  color: 'var(--text-primary)',
-                  overflowX: 'auto'
-                }}
-              >
-                {JSON.stringify(response.data, null, 2)}
-              </pre>
-            ) : (
-              <div
-                style={{
-                  background: 'var(--bg-input)',
-                  padding: '14px',
-                  borderRadius: '6px',
-                  fontFamily: 'var(--font-sans)',
-                  fontSize: '13.5px',
-                  lineHeight: '1.6',
-                  color: 'var(--text-primary)',
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word'
-                }}
-              >
-                {response.rawText || String(response.data)}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Tab 2: Raw Response */}
+        {/* Tab 2: Raw View */}
         {activeTab === 'raw' && (
-          <pre
+          <div
+            className="glass-card"
             style={{
-              background: 'var(--bg-input)',
-              padding: '14px',
-              borderRadius: '6px',
+              padding: '12px',
               fontFamily: 'var(--font-mono)',
               fontSize: '12px',
-              color: 'var(--text-primary)',
+              lineHeight: '1.5',
+              whiteSpace: softWrap ? 'pre-wrap' : 'pre',
+              wordBreak: softWrap ? 'break-word' : 'normal',
               overflowX: 'auto',
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-all'
+              minHeight: '180px',
+              color: 'var(--text-secondary)'
             }}
           >
-            {response.rawText}
-          </pre>
+            {response.rawText || 'No raw text available'}
+          </div>
         )}
 
-        {/* Tab 3: JSON Tree */}
-        {activeTab === 'tree' && <JsonTreeView data={response.data} />}
+        {/* Tab 3: Collapsible JSON Tree View */}
+        {activeTab === 'tree' && typeof response.data === 'object' && response.data !== null && (
+          <JsonTreeView data={response.data} />
+        )}
 
-        {/* Tab 4: Stream View */}
+        {/* Tab 4: Live Stream Telemetry & Chunks */}
         {activeTab === 'stream' && (
           <StreamViewer
             streamEvents={response.streamEvents || []}
-            accumulatedText={typeof response.data === 'string' ? response.data : response.rawText}
+            accumulatedText={response.rawText}
             isStreamingActive={isStreamingActive}
             onStopStreaming={onStopStreaming}
             ttfbMs={response.ttfbMs}
@@ -379,62 +359,57 @@ export function ResponsePanel({
           />
         )}
 
-        {/* Tab 5: Response Headers */}
+        {/* Tab 5: Headers */}
         {activeTab === 'headers' && (
-          <div className="glass-card" style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '8px', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              <span>Header Key</span>
-              <span>Value</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
+              Total Response Headers: {Object.keys(response.headers).length}
             </div>
-            {Object.entries(response.headers || {}).map(([k, v]) => (
-              <div
-                key={k}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '220px 1fr',
-                  gap: '8px',
-                  padding: '6px 0',
-                  borderTop: '1px solid var(--border-subtle)',
-                  fontSize: '12px',
-                  fontFamily: 'var(--font-mono)'
-                }}
-              >
-                <span style={{ color: 'var(--accent-purple)', fontWeight: 600 }}>{k}</span>
-                <span style={{ color: 'var(--text-primary)', wordBreak: 'break-all' }}>{v}</span>
-              </div>
-            ))}
+            <div className="glass-card" style={{ padding: '8px', overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', fontFamily: 'var(--font-mono)' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', color: 'var(--text-muted)' }}>
+                    <th style={{ padding: '6px 10px', width: '40%' }}>Header Key</th>
+                    <th style={{ padding: '6px 10px' }}>Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(response.headers).map(([k, v]) => (
+                    <tr key={k} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td style={{ padding: '6px 10px', color: 'var(--accent-primary)', fontWeight: 600 }}>{k}</td>
+                      <td style={{ padding: '6px 10px', color: 'var(--text-primary)', wordBreak: 'break-all' }}>{v}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
         {/* Tab 6: Diagnostics */}
         {activeTab === 'diagnostics' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div className="glass-card" style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                Request & Response Performance Telemetry
+            <div className="glass-card" style={{ padding: '14px' }}>
+              <div style={{ fontWeight: 600, fontSize: '13px', color: statusColor, marginBottom: '6px' }}>
+                Status: {response.status} {response.statusText}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginTop: '6px' }}>
-                <div style={{ background: 'var(--bg-input)', padding: '10px', borderRadius: '6px' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Total Latency</div>
-                  <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
-                    {response.durationMs} ms
-                  </div>
-                </div>
-                {response.ttfbMs !== undefined && (
-                  <div style={{ background: 'var(--bg-input)', padding: '10px', borderRadius: '6px' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Time To First Byte (TTFB)</div>
-                    <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)' }}>
-                      {response.ttfbMs} ms
-                    </div>
-                  </div>
-                )}
-                <div style={{ background: 'var(--bg-input)', padding: '10px', borderRadius: '6px' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Payload Size</div>
-                  <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
-                    {(response.sizeBytes / 1024).toFixed(2)} KB
-                  </div>
-                </div>
+              <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                {response.status === 200 && 'Request completed successfully with valid HTTP 200 OK.'}
+                {response.status === 400 && 'Bad Request: The target API server rejected the request body, parameters, or schema.'}
+                {response.status === 401 && 'Unauthorized: The provided API key is missing, expired, or invalid for this model.'}
+                {response.status === 403 && 'Forbidden / SSRF Block: Access to this endpoint was blocked or permission is denied.'}
+                {response.status === 429 && 'Rate Limit Exceeded: You have hit the provider rate limit or quota allowance.'}
+                {response.status >= 500 && 'Server Error: The upstream AI provider encountered an internal execution error.'}
+                {response.status === 0 && (response.error || 'Network error or connection refused.')}
               </div>
+            </div>
+
+            <div className="glass-card" style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px' }}>
+              <div><strong style={{ color: 'var(--text-muted)' }}>Request ID:</strong> <span style={{ fontFamily: 'var(--font-mono)' }}>{response.requestId}</span></div>
+              <div><strong style={{ color: 'var(--text-muted)' }}>Duration:</strong> {response.durationMs} ms</div>
+              {response.ttfbMs && <div><strong style={{ color: 'var(--text-muted)' }}>Time to First Byte (TTFB):</strong> {response.ttfbMs} ms</div>}
+              <div><strong style={{ color: 'var(--text-muted)' }}>Payload Size:</strong> {response.sizeBytes} bytes ({(response.sizeBytes / 1024).toFixed(2)} KB)</div>
+              <div><strong style={{ color: 'var(--text-muted)' }}>Stream Active:</strong> {response.isStream ? 'Yes (SSE/NDJSON)' : 'No (Single Response)'}</div>
             </div>
           </div>
         )}
