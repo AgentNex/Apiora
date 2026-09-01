@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ForgeLogo, SettingsIcon, SunIcon, MoonIcon, PlusIcon, BookmarkIcon, HistoryIcon, ShieldIcon } from './Icons';
+import { ForgeLogo, SettingsIcon, SunIcon, MoonIcon, PlusIcon, BookmarkIcon, HistoryIcon, ShieldIcon, CodeIcon } from './Icons';
 import { StatusIndicator } from './StatusIndicator';
 import { Environment } from '../lib/api/types';
 
@@ -113,6 +113,15 @@ export function TopNav({
             <ShieldIcon size={14} />
             <span className="hidden sm:inline">Environments</span>
           </button>
+          <a
+            href="/docs"
+            className="forge-btn forge-btn-ghost"
+            style={{ padding: '5px 10px', fontSize: '12.5px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--accent-cyan)' }}
+            title="Interactive Documentation"
+          >
+            <CodeIcon size={14} />
+            <span>Docs</span>
+          </a>
         </div>
       </div>
 
