@@ -5,7 +5,13 @@ export const metadata: Metadata = {
   title: 'API Forge AI — Universal AI Model Playground & API Debugger',
   description: 'A premium, universal AI API testing and experimentation platform. Test any endpoint, model ID, API key, custom authentication, and streaming responses with zero external visual dependencies.',
   icons: {
-    icon: '/favicon.ico'
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/icon.png', type: 'image/png' },
+      { url: '/favicon.png', type: 'image/png' }
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/logo.png'
   }
 };
 

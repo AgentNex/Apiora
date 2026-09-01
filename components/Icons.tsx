@@ -330,20 +330,22 @@ export function TerminalIcon({ size = 16, className = '', ...props }: IconProps)
   );
 }
 
-export function ForgeLogo({ size = 24, className = '' }: { size?: number; className?: string }) {
+export function ForgeLogo({ size = 28, className = '' }: { size?: number; className?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={className}>
-      <defs>
-        <linearGradient id="forgeGrad" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#6366f1" />
-          <stop offset="0.5" stopColor="#8b5cf6" />
-          <stop offset="1" stopColor="#06b6d4" />
-        </linearGradient>
-      </defs>
-      <rect x="2" y="2" width="28" height="28" rx="8" fill="#11131a" stroke="url(#forgeGrad)" strokeWidth="1.5" />
-      <path d="M9 16L16 9L23 16L16 23L9 16Z" fill="url(#forgeGrad)" fillOpacity="0.2" stroke="url(#forgeGrad)" strokeWidth="1.5" />
-      <circle cx="16" cy="16" r="3" fill="#ffffff" />
-      <path d="M16 6V9M16 23V26M6 16H9M23 16H26" stroke="#818cf8" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
+    <img
+      src="/logo.png"
+      alt="Apiora Logo"
+      width={size}
+      height={size}
+      className={className}
+      style={{
+        width: `${size}px`,
+        height: `${size}px`,
+        borderRadius: '7px',
+        objectFit: 'contain',
+        boxShadow: '0 0 12px rgba(99, 102, 241, 0.25)',
+        border: '1px solid rgba(255, 255, 255, 0.1)'
+      }}
+    />
   );
 }
