@@ -21,7 +21,6 @@
   <a href="#-key-features">Key Features</a> •
   <a href="#-workspace-modes">Workspace Modes</a> •
   <a href="#-supported-providers--presets">Presets</a> •
-  <a href="#-architecture">Architecture</a> •
   <a href="#-quick-start">Quick Start</a> •
   <a href="#-security--ssrf-defense">Security</a> •
   <a href="#-license">License</a>
@@ -75,77 +74,21 @@ Engineered for raw API experimentation, webhooks, and multimodal services:
 
 ## 🔌 Supported Providers & Presets
 
-| Provider / API | Mode | Category | Streaming | Default Auth Strategy |
-| :--- | :--- | :--- | :---: | :--- |
-| **OpenAI Chat Completions** | Chat | Major Providers | ✅ Yes | `Bearer {{API_KEY}}` |
-| **Anthropic Messages** | Chat | Major Providers | ✅ Yes | `x-api-key` + `anthropic-version` |
-| **Google Gemini Generate Content** | Multimodal | Major Providers | ✅ Yes | `x-goog-api-key` header |
-| **DeepSeek API (V3 / R1)** | Chat / Reasoning | OpenAI Compatible | ✅ Yes | `Bearer {{API_KEY}}` |
-| **Groq Cloud LPU** | Inference | OpenAI Compatible | ✅ Yes | `Bearer {{API_KEY}}` |
-| **OpenRouter Gateway** | Multi-Provider | OpenAI Compatible | ✅ Yes | `Bearer {{API_KEY}}` |
-| **Mistral AI** | Chat | Major Providers | ✅ Yes | `Bearer {{API_KEY}}` |
-| **Together AI** | Open Source | OpenAI Compatible | ✅ Yes | `Bearer {{API_KEY}}` |
-| **Cohere Chat v2** | Enterprise | Major Providers | ❌ No | `Bearer {{API_KEY}}` |
-| **Speechmatics STT (Async Job)** | Speech-to-Text | Speech & Audio | ❌ No | `Bearer {{API_KEY}}` |
-| **Deepgram Nova-2 (Audio URL)** | Speech-to-Text | Speech & Audio | ❌ No | `Authorization: Token {{API_KEY}}` |
-| **Groq Whisper (Audio Transcribe)** | Speech-to-Text | Speech & Audio | ❌ No | `Bearer {{API_KEY}}` |
-| **Generic REST JSON** | Custom | Custom | Customizable | Customizable |
-
----
-
-## 🏗 Architecture
-
-```
-apiora/
-├── app/
-│   ├── layout.tsx              # Root HTML, multi-device viewport & favicon metadata
-│   ├── page.tsx                # Main playground orchestrator wrapper
-│   ├── globals.css             # Obsidian dark design system & hardware CSS keyframes
-│   └── api/
-│       └── proxy/
-│           └── route.ts        # SSRF-protected serverless proxy & streaming pipe
-├── components/
-│   ├── AmbientBackground.tsx   # Hardware-accelerated CSS ambient atmosphere
-│   ├── ApiKeyInput.tsx         # Masked credential manager & auth strategy picker
-│   ├── ApiTester.tsx           # Primary workspace coordinator & split-pane manager
-│   ├── EndpointInput.tsx       # HTTP method selector & target URL editor
-│   ├── EnvironmentManager.tsx  # Dynamic environment variable system ({{VAR}})
-│   ├── HeaderEditor.tsx        # Dynamic HTTP headers table with toggle controls
-│   ├── Icons.tsx               # Handcrafted lightweight SVG icons
-│   ├── JsonTreeView.tsx        # Collapsible interactive JSON tree explorer
-│   ├── MessageEditor.tsx       # Multi-turn prompt matrix builder
-│   ├── ModelInput.tsx          # Unrestricted model ID selector
-│   ├── ParameterEditor.tsx     # Query parameters & model hyperparameters
-│   ├── ProviderPresetSelector.tsx # 10+ provider template selector
-│   ├── RawJsonEditor.tsx       # Custom syntax-highlighted JSON editor with auto-format
-│   ├── RequestHistory.tsx      # IndexedDB execution history inspector
-│   ├── RequestPanel.tsx        # Request Builder with Prompt Matrix / Raw REST switch
-│   ├── RequestPreview.tsx      # Real-time cURL and JavaScript fetch preview
-│   ├── ResponsePanel.tsx       # Multi-tab response inspector & performance telemetry
-│   ├── SavedRequests.tsx       # Reusable template collections manager
-│   ├── SettingsModal.tsx       # Performance, timeout, and theme settings
-│   ├── Sidebar.tsx             # Workspace navigation sidebar
-│   ├── StatusIndicator.tsx     # Connection & device telemetry badge
-│   ├── StreamViewer.tsx        # Live token stream renderer & raw chunk logs
-│   └── TopNav.tsx              # Top navigation bar with brand logo
-├── lib/
-│   ├── api/
-│   │   ├── presets.ts          # Provider preset definitions & sample payloads
-│   │   ├── proxy-client.ts     # Client-side streaming & non-streaming dispatcher
-│   │   ├── request-builder.ts  # Variable interpolation & cURL compiler
-│   │   ├── ssrf.ts             # Strict SSRF IP/hostname validation engine
-│   │   ├── stream-parser.ts    # SSE & NDJSON progressive parser
-│   │   └── types.ts            # Strict TypeScript definitions
-│   ├── performance/
-│   │   └── device-profile.ts   # Device RAM, concurrency, and motion detection
-│   └── storage/
-│       ├── encryption.ts       # Browser AES-GCM Web Crypto API encryption
-│       └── indexed-db.ts       # IndexedDB storage abstraction
-└── public/
-    ├── logo.png                # Official brand logo
-    ├── favicon.ico             # App icon
-    └── icon.png                # Progressive web icon
-```
+| Provider / API | Mode | Category | Streaming |
+| :--- | :--- | :--- | :---: |
+| **OpenAI Chat Completions** | Chat | Major Providers | ✅ Yes |
+| **Anthropic Messages** | Chat | Major Providers | ✅ Yes |
+| **Google Gemini Generate Content** | Multimodal | Major Providers | ✅ Yes |
+| **DeepSeek API (V3 / R1)** | Chat / Reasoning | OpenAI Compatible | ✅ Yes |
+| **Groq Cloud LPU** | Inference | OpenAI Compatible | ✅ Yes |
+| **OpenRouter Gateway** | Multi-Provider | OpenAI Compatible | ✅ Yes |
+| **Mistral AI** | Chat | Major Providers | ✅ Yes |
+| **Together AI** | Open Source | OpenAI Compatible | ✅ Yes |
+| **Cohere Chat v2** | Enterprise | Major Providers | ❌ No |
+| **Speechmatics STT (Async Job)** | Speech-to-Text | Speech & Audio | ❌ No |
+| **Deepgram Nova-2 (Audio URL)** | Speech-to-Text | Speech & Audio | ❌ No |
+| **Groq Whisper (Audio Transcribe)** | Speech-to-Text | Speech & Audio | ❌ No |
+| **Generic REST JSON** | Custom | Custom | Customizable |
 
 ---
 
