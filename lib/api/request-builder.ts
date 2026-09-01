@@ -254,8 +254,12 @@ export function prepareRequest(
       maskedHeaders['x-api-key'] = maskSensitiveValue(apiKeyInterpolated);
     } else if (config.authType === 'custom-header' && config.customAuthHeaderKey) {
       const headerKey = interpolateVariables(config.customAuthHeaderKey, environment);
-      headers[headerKey] = apiKeyInterpolated;
-      maskedHeaders[headerKey] = maskSensitiveValue(apiKeyInterpolated);
+      let headerVal = apiKeyInterpolated;
+      if (config.customAuthHeaderValue) {
+        headerVal = config.customAuthHeaderValue.replace(/{{\s*API_KEY\s*}}/gi, apiKeyInterpolated);
+      }
+      headers[headerKey] = headerVal;
+      maskedHeaders[headerKey] = maskSensitiveValue(headerVal);
     }
   }
 

@@ -23,6 +23,97 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
       max_tokens: 1000,
       stream: false
     },
+    defaultRawBody: JSON.stringify({
+      model: 'custom-model',
+      messages: [{ role: 'user', content: 'Hello! Please introduce yourself.' }],
+      temperature: 0.7
+    }, null, 2),
+    isStreaming: false,
+    streamExtractor: 'generic'
+  },
+  {
+    id: 'speechmatics-stt',
+    name: 'Speechmatics Speech-to-Text (Async Job)',
+    category: 'Speech & Audio',
+    description: 'Speechmatics batch asynchronous transcription API with language configuration, speaker diarization, and entities extraction.',
+    defaultMethod: 'POST',
+    endpointTemplate: 'https://asr.api.speechmatics.com/v2/jobs/',
+    defaultModel: 'enhanced',
+    authType: 'bearer',
+    defaultHeaders: [
+      { key: 'Content-Type', value: 'application/json', enabled: true },
+      { key: 'Accept', value: 'application/json', enabled: true }
+    ],
+    defaultBodyMode: 'raw',
+    defaultMessages: [
+      { id: '1', role: 'user', content: 'Speechmatics STT Job Request' }
+    ],
+    defaultParameters: {},
+    defaultRawBody: JSON.stringify({
+      type: "transcription",
+      transcription_config: {
+        language: "en",
+        operating_point: "enhanced",
+        enable_entities: true,
+        diarization: "speaker"
+      },
+      fetch_data: {
+        url: "https://example.com/audio-sample.mp3"
+      }
+    }, null, 2),
+    isStreaming: false,
+    streamExtractor: 'generic'
+  },
+  {
+    id: 'deepgram-nova2',
+    name: 'Deepgram Nova-2 (Sync Audio URL)',
+    category: 'Speech & Audio',
+    description: 'Deepgram Nova-2 ultra-fast speech-to-text API for audio URLs with smart formatting, punctuation, and speaker diarization.',
+    defaultMethod: 'POST',
+    endpointTemplate: 'https://api.deepgram.com/v1/listen?model=nova-2&smart_format=true&punctuate=true&diarize=true',
+    defaultModel: 'nova-2',
+    authType: 'custom-header',
+    customAuthHeaderKey: 'Authorization',
+    customAuthHeaderValue: 'Token {{API_KEY}}',
+    defaultHeaders: [
+      { key: 'Content-Type', value: 'application/json', enabled: true },
+      { key: 'Accept', value: 'application/json', enabled: true }
+    ],
+    defaultBodyMode: 'raw',
+    defaultMessages: [
+      { id: '1', role: 'user', content: 'Deepgram Audio URL Transcription' }
+    ],
+    defaultParameters: {},
+    defaultRawBody: JSON.stringify({
+      url: "https://dpgr.am/bueller.wav"
+    }, null, 2),
+    isStreaming: false,
+    streamExtractor: 'generic'
+  },
+  {
+    id: 'groq-whisper',
+    name: 'Groq Whisper (Sync Audio Transcription)',
+    category: 'Speech & Audio',
+    description: 'Ultra-fast speech transcription powered by Whisper Large v3 on Groq LPUs.',
+    defaultMethod: 'POST',
+    endpointTemplate: 'https://api.groq.com/openai/v1/audio/transcriptions',
+    defaultModel: 'whisper-large-v3',
+    authType: 'bearer',
+    defaultHeaders: [
+      { key: 'Content-Type', value: 'application/json', enabled: true }
+    ],
+    defaultBodyMode: 'raw',
+    defaultMessages: [
+      { id: '1', role: 'user', content: 'Groq Whisper Audio Transcription' }
+    ],
+    defaultParameters: {},
+    defaultRawBody: JSON.stringify({
+      model: "whisper-large-v3",
+      temperature: 0,
+      response_format: "verbose_json",
+      language: "en",
+      url: "https://example.com/audio-sample.mp3"
+    }, null, 2),
     isStreaming: false,
     streamExtractor: 'generic'
   },
@@ -49,6 +140,15 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
       max_tokens: 2048,
       stream: true
     },
+    defaultRawBody: JSON.stringify({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: "You are an expert AI assistant providing concise, high-quality answers." },
+        { role: "user", content: "Write a quick summary of modern streaming API design." }
+      ],
+      temperature: 0.7,
+      stream: true
+    }, null, 2),
     isStreaming: true,
     streamExtractor: 'openai'
   },
@@ -75,6 +175,15 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
       temperature: 0.7,
       stream: true
     },
+    defaultRawBody: JSON.stringify({
+      model: "claude-3-5-sonnet-20241022",
+      max_tokens: 1024,
+      system: "You are Claude, a helpful and precise AI engineer.",
+      messages: [
+        { role: "user", content: "Explain how Server-Sent Events work with HTTP/2." }
+      ],
+      stream: true
+    }, null, 2),
     isStreaming: true,
     streamExtractor: 'anthropic'
   },
@@ -101,6 +210,19 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
       max_tokens: 2048,
       stream: true
     },
+    defaultRawBody: JSON.stringify({
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: "Give me 3 core principles for robust API architecture." }]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        topP: 0.95,
+        maxOutputTokens: 2048
+      }
+    }, null, 2),
     isStreaming: true,
     streamExtractor: 'gemini'
   },
@@ -128,6 +250,15 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
       max_tokens: 1500,
       stream: true
     },
+    defaultRawBody: JSON.stringify({
+      model: "deepseek/deepseek-chat",
+      messages: [
+        { role: "system", content: "You are a helpful coding assistant." },
+        { role: "user", content: "Write a TypeScript function to parse Server-Sent Events." }
+      ],
+      temperature: 0.6,
+      stream: true
+    }, null, 2),
     isStreaming: true,
     streamExtractor: 'openai'
   },
@@ -152,6 +283,14 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
       max_tokens: 2048,
       stream: true
     },
+    defaultRawBody: JSON.stringify({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        { role: "user", content: "Benchmark comparison between synchronous REST and SSE streaming." }
+      ],
+      temperature: 0.5,
+      stream: true
+    }, null, 2),
     isStreaming: true,
     streamExtractor: 'openai'
   },
@@ -176,6 +315,14 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
       max_tokens: 2048,
       stream: true
     },
+    defaultRawBody: JSON.stringify({
+      model: "deepseek-chat",
+      messages: [
+        { role: "user", content: "Explain how chain-of-thought distillation works." }
+      ],
+      temperature: 0.7,
+      stream: true
+    }, null, 2),
     isStreaming: true,
     streamExtractor: 'openai'
   },
@@ -200,6 +347,14 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
       max_tokens: 2000,
       stream: true
     },
+    defaultRawBody: JSON.stringify({
+      model: "mistral-large-latest",
+      messages: [
+        { role: "user", content: "Provide a concise overview of modern web architecture patterns." }
+      ],
+      temperature: 0.7,
+      stream: true
+    }, null, 2),
     isStreaming: true,
     streamExtractor: 'openai'
   },
@@ -224,6 +379,14 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
       max_tokens: 1500,
       stream: true
     },
+    defaultRawBody: JSON.stringify({
+      model: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+      messages: [
+        { role: "user", content: "How to build high-concurrency event loops in Node.js?" }
+      ],
+      temperature: 0.7,
+      stream: true
+    }, null, 2),
     isStreaming: true,
     streamExtractor: 'openai'
   },
@@ -248,6 +411,13 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
       max_tokens: 1500,
       stream: false
     },
+    defaultRawBody: JSON.stringify({
+      model: "command-r-plus-08-2024",
+      messages: [
+        { role: "user", content: "What are the key advantages of RAG over model fine-tuning?" }
+      ],
+      temperature: 0.3
+    }, null, 2),
     isStreaming: false,
     streamExtractor: 'generic'
   }

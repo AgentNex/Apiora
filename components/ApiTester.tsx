@@ -136,9 +136,11 @@ export function ApiTester() {
       modelId: preset.defaultModel,
       authType: preset.authType,
       customAuthHeaderKey: preset.customAuthHeaderKey,
+      customAuthHeaderValue: preset.customAuthHeaderValue,
       headers: preset.defaultHeaders.map((h, idx) => ({ id: `h_${Date.now()}_${idx}`, ...h })),
       messages: preset.defaultMessages,
       parameters: preset.defaultParameters,
+      rawBody: preset.defaultRawBody || prev.rawBody,
       isStreaming: preset.isStreaming,
       bodyMode: preset.defaultBodyMode
     }));

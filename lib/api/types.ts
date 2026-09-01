@@ -105,17 +105,19 @@ export type StreamExtractorType = 'openai' | 'anthropic' | 'gemini' | 'generic';
 export interface ProviderPreset {
   id: string;
   name: string;
-  category: 'Major Providers' | 'OpenAI Compatible' | 'Local & Gateways' | 'Custom';
+  category: 'Major Providers' | 'OpenAI Compatible' | 'Speech & Audio' | 'Local & Gateways' | 'Custom';
   description: string;
   defaultMethod: HttpMethod;
   endpointTemplate: string;
   defaultModel: string;
   authType: AuthType;
   customAuthHeaderKey?: string;
+  customAuthHeaderValue?: string;
   defaultHeaders: { key: string; value: string; enabled: boolean }[];
   defaultBodyMode: BodyMode;
   defaultMessages: Message[];
   defaultParameters: Record<string, any>;
+  defaultRawBody?: string;
   isStreaming: boolean;
   streamExtractor: StreamExtractorType;
 }
