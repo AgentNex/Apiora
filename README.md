@@ -10,15 +10,19 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18.3-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/)
 [![Deployment](https://img.shields.io/badge/Vercel-Live_Production-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://api-forge-ai-ivory.vercel.app)
+[![Documentation](https://img.shields.io/badge/Docs-Interactive_Portal-8b5cf6?style=for-the-badge&logo=googledocs&logoColor=white)](https://api-forge-ai-ivory.vercel.app/docs)
 [![License: MIT](https://img.shields.io/badge/License-MIT-10b981?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![SSRF Protected](https://img.shields.io/badge/Security-SSRF_Hardened-6366f1?style=for-the-badge)](https://owasp.org/www-community/attacks/Server_Side_Request_Forgery)
 [![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-06b6d4?style=for-the-badge)](https://github.com/AgentNex/Apiora/pulls)
 
 <p align="center">
-  <a href="https://api-forge-ai-ivory.vercel.app"><strong>Explore Live Demo »</strong></a>
+  <a href="https://api-forge-ai-ivory.vercel.app"><strong>🚀 Explore Live Playground »</strong></a>
+  &nbsp;&nbsp;•&nbsp;&nbsp;
+  <a href="https://api-forge-ai-ivory.vercel.app/docs"><strong>📖 Full Documentation Portal »</strong></a>
   <br />
   <br />
   <a href="#-key-features">Key Features</a> •
+  <a href="#-full-documentation-portal">Documentation</a> •
   <a href="#-workspace-modes">Workspace Modes</a> •
   <a href="#-supported-providers--presets">Presets</a> •
   <a href="#-quick-start">Quick Start</a> •
@@ -34,7 +38,28 @@
 
 **Apiora** (formerly *API Forge AI*) is a high-craft, production-grade developer laboratory engineered for testing, inspecting, and benchmarking LLM and Speech/Audio model APIs. Built without heavy visual frameworks or proprietary SDK dependencies, Apiora provides native Web Streams, bidirectional formatting, SSRF-hardened serverless proxying, and pure CSS ambient motion.
 
-> 🚀 **Live Production Deployment**: [https://api-forge-ai-ivory.vercel.app](https://api-forge-ai-ivory.vercel.app)
+> 🚀 **Live Production Application**: [https://api-forge-ai-ivory.vercel.app](https://api-forge-ai-ivory.vercel.app)  
+> 📖 **Full Interactive Documentation**: [https://api-forge-ai-ivory.vercel.app/docs](https://api-forge-ai-ivory.vercel.app/docs)
+
+---
+
+## 📖 Full Documentation Portal
+
+The full, interactive developer documentation portal is hosted live at **[https://api-forge-ai-ivory.vercel.app/docs](https://api-forge-ai-ivory.vercel.app/docs)** with multi-language code snippets, searchable topics, collapsible technical deep-dives, and copyable payloads.
+
+### 📚 Documentation Chapters:
+1. **[Overview & Architecture Philosophy](https://api-forge-ai-ivory.vercel.app/docs#overview)** — Universal playground vision, native Web Streams, and zero-bloat principles.
+2. **[30-Second Quickstart Guide](https://api-forge-ai-ivory.vercel.app/docs#quickstart)** — Step-by-step instructions for firing your first live AI request.
+3. **[Workspace Modes](https://api-forge-ai-ivory.vercel.app/docs#workspace-modes)** — Detailed guide to **Prompt Matrix** vs. **Raw JSON / REST** mode.
+4. **[Supported Providers & Presets](https://api-forge-ai-ivory.vercel.app/docs#presets)** — Payloads and setup for OpenAI, Anthropic, Gemini, DeepSeek, Groq, Mistral, Together, and Cohere.
+5. **[Speech & Audio STT Presets](https://api-forge-ai-ivory.vercel.app/docs#speech-audio)** — Asynchronous and synchronous voice presets for **Speechmatics**, **Deepgram Nova-2**, and **Groq Whisper**.
+6. **[Real-Time Streaming Engine](https://api-forge-ai-ivory.vercel.app/docs#streaming)** — Web Streams mechanics, SSE vs NDJSON chunk parsing, TTFB, and abort cancellation.
+7. **[Response Inspector & JSON Tree](https://api-forge-ai-ivory.vercel.app/docs#response-inspector)** — 6-tab response exploration, collapsible tree navigation, and path copying.
+8. **[Security & SSRF Defense](https://api-forge-ai-ivory.vercel.app/docs#security)** — RFC1918 subnet filtering, cloud metadata protection (`169.254.169.254`), and client-side AES-GCM 256-bit encryption.
+9. **[Dynamic Environments & Variable Interpolation](https://api-forge-ai-ivory.vercel.app/docs#environments)** — Defining and injecting `{{VARIABLE_NAME}}` across URLs, headers, and bodies.
+10. **[Local Persistence & Collections](https://api-forge-ai-ivory.vercel.app/docs#indexeddb)** — IndexedDB offline database, sanitized execution history, and template folders.
+11. **[Keyboard Shortcuts Reference](https://api-forge-ai-ivory.vercel.app/docs#shortcuts)** — Power user shortcuts for instant sending, formatting, and stream cancellation.
+12. **[Proxy API Specification](https://api-forge-ai-ivory.vercel.app/docs#proxy-api)** — Complete schema definition for the `/api/proxy` serverless route.
 
 ---
 
