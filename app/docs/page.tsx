@@ -231,14 +231,19 @@ const SECTIONS = [
   { id: 'quickstart', title: '2. 30-Second Quickstart', icon: TerminalIcon },
   { id: 'workspace-modes', title: '3. Workspace Modes', icon: CodeIcon },
   { id: 'presets', title: '4. Providers & Presets', icon: GlobeIcon },
-  { id: 'speech-audio', title: '5. Speech & Audio STT', icon: ActivityIcon },
-  { id: 'streaming', title: '6. Real-Time Streaming', icon: ActivityIcon },
-  { id: 'response-inspector', title: '7. Response & JSON Tree', icon: TreeIcon },
-  { id: 'security', title: '8. Security & SSRF Defense', icon: ShieldIcon },
-  { id: 'environments', title: '9. Environments ({{VAR}})', icon: SlidersIcon },
-  { id: 'indexeddb', title: '10. Local Persistence', icon: LayersIcon },
-  { id: 'shortcuts', title: '11. Keyboard Shortcuts', icon: KeyIcon },
-  { id: 'proxy-api', title: '12. Proxy API Reference', icon: CpuIcon }
+  { id: 'arena', title: '5. Multi-Model Arena', icon: SparklesIcon },
+  { id: 'pipelines', title: '6. Chained Pipelines', icon: ActivityIcon },
+  { id: 'cost-calculator', title: '7. Token & Cost Engine', icon: SlidersIcon },
+  { id: 'speech-audio', title: '8. Speech & Audio STT', icon: ActivityIcon },
+  { id: 'streaming', title: '9. Real-Time Streaming', icon: ActivityIcon },
+  { id: 'response-inspector', title: '10. Response & JSON Tree', icon: TreeIcon },
+  { id: 'assertions', title: '11. Test Assertions', icon: SparklesIcon },
+  { id: 'code-export', title: '12. Multi-Language SDKs', icon: TerminalIcon },
+  { id: 'security', title: '13. Security & SSRF Defense', icon: ShieldIcon },
+  { id: 'environments', title: '14. Environments ({{VAR}})', icon: SlidersIcon },
+  { id: 'indexeddb', title: '15. Local Persistence & Backup', icon: LayersIcon },
+  { id: 'shortcuts', title: '16. Keyboard & Cmd+K', icon: KeyIcon },
+  { id: 'proxy-api', title: '17. Proxy API Reference', icon: CpuIcon }
 ];
 
 export default function DocsPage() {
@@ -592,10 +597,70 @@ export default function DocsPage() {
             </Accordion>
           </section>
 
-          {/* Section 5: Speech & Audio */}
+          {/* Section 5: Arena */}
+          <section id="arena" style={{ marginBottom: '48px', scrollMarginTop: '80px' }}>
+            <h2 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 12px 0' }}>
+              5. Multi-Model Comparison Arena
+            </h2>
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+              Benchmark 2 to 4 AI models simultaneously with identical prompts. Observe synchronized streaming outputs, latency metrics, tokens/sec throughput, and cost differentials side-by-side in real time.
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', margin: '16px 0' }}>
+              <div className="glass-card" style={{ padding: '14px' }}>
+                <div style={{ fontWeight: 600, color: 'var(--accent-primary)', marginBottom: '4px' }}>⚡ Concurrent Dispatch</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Dispatches parallel HTTP/SSE streams to OpenAI, Claude, Gemini, and DeepSeek with zero UI freezing.</div>
+              </div>
+              <div className="glass-card" style={{ padding: '14px' }}>
+                <div style={{ fontWeight: 600, color: 'var(--accent-cyan)', marginBottom: '4px' }}>📊 Synchronized Metrics</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Real-time calculation of Time to First Byte (TTFB), total duration, token generation speed, and exact cost.</div>
+              </div>
+            </div>
+          </section>
+
+          {/* Section 6: Pipelines */}
+          <section id="pipelines" style={{ marginBottom: '48px', scrollMarginTop: '80px' }}>
+            <h2 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 12px 0' }}>
+              6. Request Chaining & Sequential Pipelines
+            </h2>
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+              Construct multi-step prompt pipelines where output from Step 1 feeds into Step 2 and Step 3 using template variables like <code className="forge-code">{`{{step_1.output}}`}</code>.
+            </p>
+            <CodeSnippet
+              title="Pipeline Step Chaining Syntax"
+              language="markdown"
+              code={`Step 1 (Summarizer):
+Summarize this raw article in 2 bullet points:
+{{input}}
+
+Step 2 (JSON Entity Extractor):
+Extract names, dates, and organizations from the summary as JSON:
+{{step_1.output}}
+
+Step 3 (Translator):
+Translate the extracted output to French:
+{{step_2.output}}`}
+            />
+          </section>
+
+          {/* Section 7: Cost Calculator */}
+          <section id="cost-calculator" style={{ marginBottom: '48px', scrollMarginTop: '80px' }}>
+            <h2 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 12px 0' }}>
+              7. Live Token & Cost Calculation Engine
+            </h2>
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+              Apiora embeds an offline tokenizer and model pricing catalog to calculate input tokens and cost <em>before</em> sending, and logs running session expenses in real time in the top status bar.
+            </p>
+            <div className="glass-card" style={{ padding: '14px' }}>
+              <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>
+                <strong>Pricing Catalog Coverage:</strong> Includes GPT-4o, GPT-4o Mini, o1, o3-mini, Claude 3.7 Sonnet, Claude 3.5 Sonnet, Claude 3.5 Haiku, Gemini 2.0 Flash, Gemini 1.5 Pro, DeepSeek V3, DeepSeek R1, Llama 3.3 70B, Mistral Large, and custom overrides.
+              </div>
+            </div>
+          </section>
+
+          {/* Section 8: Speech & Audio */}
           <section id="speech-audio" style={{ marginBottom: '48px', scrollMarginTop: '80px' }}>
             <h2 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 12px 0' }}>
-              5. Speech & Audio Presets
+              8. Speech & Audio Presets
             </h2>
             <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
               Apiora includes first-class Quick Presets for leading Speech-to-Text (STT) and audio transcription APIs in Raw REST mode:

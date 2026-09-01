@@ -4,6 +4,7 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'API Forge AI — Universal AI Model Playground & API Debugger',
   description: 'A premium, universal AI API testing and experimentation platform. Test any endpoint, model ID, API key, custom authentication, and streaming responses with zero external visual dependencies.',
+  manifest: '/manifest.json',
   icons: {
     icon: [
       { url: '/favicon.ico' },

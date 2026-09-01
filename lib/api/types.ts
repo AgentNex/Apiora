@@ -107,6 +107,7 @@ export type StreamExtractorType = 'openai' | 'anthropic' | 'gemini' | 'generic';
 export interface ProviderPreset {
   id: string;
   name: string;
+  provider?: string;
   category: 'Major Providers' | 'OpenAI Compatible' | 'Speech & Audio' | 'Local & Gateways' | 'Custom';
   description: string;
   defaultMethod: HttpMethod;

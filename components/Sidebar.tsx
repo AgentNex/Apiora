@@ -9,13 +9,14 @@ import {
   ShieldIcon,
   SparklesIcon,
   XIcon,
-  PlusIcon
+  PlusIcon,
+  ActivityIcon
 } from './Icons';
 import { RequestHistoryItem, SavedRequest } from '../lib/api/types';
 
 interface SidebarProps {
-  activeTab: 'playground' | 'history' | 'saved' | 'environments';
-  onSelectTab: (tab: 'playground' | 'history' | 'saved' | 'environments') => void;
+  activeTab: 'playground' | 'arena' | 'pipeline' | 'history' | 'saved' | 'environments';
+  onSelectTab: (tab: 'playground' | 'arena' | 'pipeline' | 'history' | 'saved' | 'environments') => void;
   historyItems: RequestHistoryItem[];
   savedRequests: SavedRequest[];
   onSelectHistoryItem: (item: RequestHistoryItem) => void;
@@ -36,7 +37,7 @@ export function Sidebar({
   isMobileDrawerOpen = false,
   onCloseMobileDrawer
 }: SidebarProps) {
-  const handleItemClick = (tab: 'playground' | 'history' | 'saved' | 'environments') => {
+  const handleItemClick = (tab: 'playground' | 'arena' | 'pipeline' | 'history' | 'saved' | 'environments') => {
     onSelectTab(tab);
     if (onCloseMobileDrawer) onCloseMobileDrawer();
   };
@@ -56,7 +57,7 @@ export function Sidebar({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '14px' }}>
-          <span>Navigation</span>
+          <span>Apiora Navigation</span>
         </div>
         <button
           type="button"
@@ -84,6 +85,28 @@ export function Sidebar({
 
         <button
           type="button"
+          onClick={() => handleItemClick('arena')}
+          className={`forge-btn ${activeTab === 'arena' ? 'forge-btn-primary' : 'forge-btn-ghost'} sidebar-item-center`}
+          style={{ justifyContent: 'flex-start', width: '100%', padding: '8px 12px' }}
+          title="Multi-Model Comparison Arena"
+        >
+          <SparklesIcon size={15} style={{ color: 'var(--accent-primary)' }} />
+          <span className="sidebar-label">Model Arena</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleItemClick('pipeline')}
+          className={`forge-btn ${activeTab === 'pipeline' ? 'forge-btn-primary' : 'forge-btn-ghost'} sidebar-item-center`}
+          style={{ justifyContent: 'flex-start', width: '100%', padding: '8px 12px' }}
+          title="Sequential Request Pipelines"
+        >
+          <ActivityIcon size={15} style={{ color: 'var(--accent-cyan)' }} />
+          <span className="sidebar-label">Pipelines</span>
+        </button>
+
+        <button
+          type="button"
           onClick={() => handleItemClick('history')}
           className={`forge-btn ${activeTab === 'history' ? 'forge-btn-primary' : 'forge-btn-ghost'} sidebar-item-center`}
           style={{ justifyContent: 'flex-start', width: '100%', padding: '8px 12px' }}
@@ -98,7 +121,8 @@ export function Sidebar({
               fontSize: '11px',
               background: 'rgba(255,255,255,0.08)',
               padding: '1px 6px',
-              borderRadius: '999px'
+              borderRadius: '4px',
+              color: 'var(--text-muted)'
             }}
           >
             {historyItems.length}
@@ -121,7 +145,8 @@ export function Sidebar({
               fontSize: '11px',
               background: 'rgba(255,255,255,0.08)',
               padding: '1px 6px',
-              borderRadius: '999px'
+              borderRadius: '4px',
+              color: 'var(--text-muted)'
             }}
           >
             {savedRequests.length}
@@ -133,7 +158,7 @@ export function Sidebar({
           onClick={() => handleItemClick('environments')}
           className={`forge-btn ${activeTab === 'environments' ? 'forge-btn-primary' : 'forge-btn-ghost'} sidebar-item-center`}
           style={{ justifyContent: 'flex-start', width: '100%', padding: '8px 12px' }}
-          title="Environments"
+          title="Environment Variables"
         >
           <ShieldIcon size={15} />
           <span className="sidebar-label">Environments</span>
@@ -141,139 +166,108 @@ export function Sidebar({
 
         <Link
           href="/docs"
+          onClick={() => onCloseMobileDrawer && onCloseMobileDrawer()}
           className="forge-btn forge-btn-ghost sidebar-item-center"
           style={{ justifyContent: 'flex-start', width: '100%', padding: '8px 12px', textDecoration: 'none', color: 'var(--accent-cyan)' }}
-          title="Documentation"
+          title="Interactive Documentation"
         >
-          <SparklesIcon size={15} />
-          <span className="sidebar-label">Docs Portal</span>
+          <CodeIcon size={15} />
+          <span className="sidebar-label">Documentation</span>
         </Link>
       </div>
 
-      <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '0 12px' }} />
-
-      {/* Quick Recent Activity List */}
-      <div className="sidebar-label" style={{ flex: 1, padding: '12px', overflowY: 'auto' }}>
-        <div
-          style={{
-            fontSize: '11px',
-            fontWeight: 600,
-            textTransform: 'uppercase',
-            color: 'var(--text-muted)',
-            letterSpacing: '0.05em',
-            marginBottom: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}
-        >
-          <span>Recent Activity</span>
-          <button
-            type="button"
-            onClick={() => handleItemClick('history')}
-            style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', fontSize: '11px' }}
-          >
-            View all
-          </button>
+      {/* Recent History Snippets in Sidebar */}
+      <div className="sidebar-history-container" style={{ padding: '0 12px 12px', display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0' }}>
+          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Recent Requests
+          </span>
+          {historyItems.length > 0 && (
+            <button
+              type="button"
+              onClick={() => handleItemClick('history')}
+              style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: '11px', cursor: 'pointer' }}
+            >
+              View all
+            </button>
+          )}
         </div>
 
-        {historyItems.length === 0 ? (
-          <div
-            style={{
-              padding: '16px 8px',
-              textAlign: 'center',
-              color: 'var(--text-muted)',
-              fontSize: '12px'
-            }}
-          >
-            No requests executed yet.
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {historyItems.slice(0, 6).map((item) => {
-              const isSuccess = item.status >= 200 && item.status < 300;
-              const isClientError = item.status >= 400 && item.status < 500;
-
-              return (
-                <div
-                  key={item.id}
-                  onClick={() => {
-                    onSelectHistoryItem(item);
-                    if (onCloseMobileDrawer) onCloseMobileDrawer();
-                  }}
-                  className="glass-card"
-                  style={{
-                    padding: '8px 10px',
-                    cursor: 'pointer',
-                    fontSize: '12px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '4px'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span className={`forge-badge method-badge-${item.method.toLowerCase()}`} style={{ fontSize: '9px', padding: '1px 5px' }}>
-                      {item.method}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: '10px',
-                        fontFamily: 'var(--font-mono)',
-                        color: isSuccess ? 'var(--accent-emerald)' : isClientError ? 'var(--accent-amber)' : 'var(--accent-rose)',
-                        fontWeight: 600
-                      }}
-                    >
-                      {item.status || 'ERR'}
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '11px',
-                      color: 'var(--text-primary)',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    {item.modelId || item.endpoint}
-                  </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          {historyItems.slice(0, 5).map((item) => {
+            const isSuccess = item.status >= 200 && item.status < 300;
+            return (
+              <div
+                key={item.id}
+                onClick={() => {
+                  onSelectHistoryItem(item);
+                  if (onCloseMobileDrawer) onCloseMobileDrawer();
+                }}
+                className="history-card"
+                style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: '3px' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span className={`forge-badge method-badge-${item.method.toLowerCase()}`} style={{ fontSize: '9px', padding: '1px 4px' }}>
+                    {item.method}
+                  </span>
+                  <span style={{ fontSize: '10.5px', color: isSuccess ? 'var(--accent-emerald)' : 'var(--accent-rose)', fontFamily: 'var(--font-mono)' }}>
+                    {item.status}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
-        )}
+                <div style={{ fontSize: '11px', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {item.modelId || item.endpoint}
+                </div>
+              </div>
+            );
+          })}
+          {historyItems.length === 0 && (
+            <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontStyle: 'italic', padding: '8px 0' }}>
+              No recent requests yet.
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 
   return (
     <>
-      {/* Desktop & Tablet Sidebar */}
+      {/* 1. Desktop & Tablet Sidebar Rail */}
       <aside
-        className="desktop-sidebar hidden md:flex"
+        className="sidebar-rail hidden md:flex glass-panel"
         style={{
-          width: 'var(--sidebar-width)',
-          background: 'var(--bg-surface)',
-          borderRight: '1px solid var(--border-subtle)',
           flexDirection: 'column',
+          borderRight: '1px solid var(--border-subtle)',
+          borderRadius: 0,
+          borderTop: 'none',
+          borderBottom: 'none',
+          borderLeft: 'none',
           height: 'calc(100dvh - var(--header-height))',
-          overflowY: 'auto',
-          zIndex: 10,
-          transition: 'width 0.2s ease'
+          position: 'relative',
+          zIndex: 10
         }}
       >
         {navContent}
       </aside>
 
-      {/* Mobile Slide-Over Drawer */}
-      <div
-        className={`mobile-drawer-overlay md:hidden ${isMobileDrawerOpen ? 'open' : ''}`}
-        onClick={onCloseMobileDrawer}
-      />
-      <div className={`mobile-drawer-content md:hidden ${isMobileDrawerOpen ? 'open' : ''}`}>
-        {navContent}
-      </div>
+      {/* 2. Mobile Slide-Over Drawer with backdrop */}
+      {isMobileDrawerOpen && (
+        <div className="md:hidden">
+          <div
+            className="mobile-drawer-overlay"
+            onClick={onCloseMobileDrawer}
+            aria-hidden="true"
+          />
+          <div
+            className="mobile-drawer-content"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Mobile navigation"
+          >
+            {navContent}
+          </div>
+        </div>
+      )}
     </>
   );
 }

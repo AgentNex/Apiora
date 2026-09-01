@@ -1,0 +1,21 @@
+{
+  "name": "Apiora - The Postman for AI Engineers",
+  "short_name": "Apiora",
+  "description": "High-performance AI model API developer playground with SSE streaming, SSRF proxy, and multi-provider presets.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

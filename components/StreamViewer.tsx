@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react';
 import { StreamEvent } from '../lib/api/types';
-import { CopyIcon, CheckIcon, StopIcon, ActivityIcon, BracesIcon, FileTextIcon } from './Icons';
+import { CopyIcon, CheckIcon, StopIcon, ActivityIcon, BracesIcon, FileTextIcon, LayersIcon } from './Icons';
 import { estimateTokens } from '../lib/api/stream-parser';
+import { StreamingTimeline } from './StreamingTimeline';
 
 interface StreamViewerProps {
   streamEvents: StreamEvent[];
@@ -24,7 +25,7 @@ export function StreamViewer({
   durationMs,
   sizeBytes
 }: StreamViewerProps) {
-  const [activeTab, setActiveTab] = useState<'parsed' | 'raw'>('parsed');
+  const [activeTab, setActiveTab] = useState<'parsed' | 'raw' | 'timeline'>('parsed');
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -100,114 +101,108 @@ export function StreamViewer({
             style={{ padding: '5px 10px', fontSize: '12px', border: '1px solid var(--border-subtle)' }}
           >
             {copied ? <CheckIcon size={13} style={{ color: 'var(--accent-emerald)' }} /> : <CopyIcon size={13} />}
-            <span>Copy Output</span>
+            <span>{copied ? 'Copied' : 'Copy Output'}</span>
           </button>
         </div>
       </div>
 
-      {/* Sub-tab Switcher (Parsed View vs Raw Event Stream) */}
-      <div style={{ display: 'flex', gap: '4px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
+      {/* Sub-tabs: Parsed Text vs Raw Chunks vs Timeline Waterfall */}
+      <div className="touch-pill-row">
         <button
           type="button"
           onClick={() => setActiveTab('parsed')}
           className={`forge-btn ${activeTab === 'parsed' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
-          style={{ padding: '4px 10px', fontSize: '12px' }}
+          style={{ padding: '4px 10px', fontSize: '11.5px' }}
         >
-          <FileTextIcon size={13} />
-          <span>Parsed Output</span>
+          <FileTextIcon size={12} />
+          <span>Accumulated Text</span>
         </button>
+
         <button
           type="button"
           onClick={() => setActiveTab('raw')}
           className={`forge-btn ${activeTab === 'raw' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
-          style={{ padding: '4px 10px', fontSize: '12px' }}
+          style={{ padding: '4px 10px', fontSize: '11.5px' }}
         >
-          <BracesIcon size={13} />
-          <span>Raw Event Stream ({streamEvents.length})</span>
+          <BracesIcon size={12} />
+          <span>Raw Chunks ({streamEvents.length})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('timeline')}
+          className={`forge-btn ${activeTab === 'timeline' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
+          style={{ padding: '4px 10px', fontSize: '11.5px' }}
+        >
+          <ActivityIcon size={12} />
+          <span>Timeline Waterfall</span>
         </button>
       </div>
 
-      {/* Content Rendering */}
-      {activeTab === 'parsed' ? (
+      {/* Tab 1: Clean Rendered Output */}
+      {activeTab === 'parsed' && (
         <div
           className="glass-card"
           style={{
-            padding: '16px',
-            minHeight: '240px',
-            maxHeight: '550px',
-            overflowY: 'auto',
-            fontFamily: 'var(--font-sans)',
-            fontSize: '13.5px',
-            lineHeight: '1.65',
-            color: 'var(--text-primary)',
+            padding: '14px',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '12.5px',
+            lineHeight: '1.6',
             whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word'
+            wordBreak: 'break-word',
+            maxHeight: '480px',
+            overflowY: 'auto'
           }}
         >
           {accumulatedText || (
-            <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>
-              {isStreamingActive ? 'Awaiting first stream chunk...' : 'No stream output recorded.'}
-            </span>
-          )}
-          {isStreamingActive && (
-            <span
-              style={{
-                display: 'inline-block',
-                width: '6px',
-                height: '14px',
-                background: 'var(--accent-primary)',
-                marginLeft: '4px',
-                verticalAlign: 'middle',
-                animation: 'streamGlowPulse 0.8s infinite'
-              }}
-            />
+            <span style={{ color: 'var(--text-muted)' }}>Waiting for first stream chunk...</span>
           )}
         </div>
-      ) : (
-        /* Raw Stream Events Inspector */
+      )}
+
+      {/* Tab 2: Raw SSE Chunks */}
+      {activeTab === 'raw' && (
         <div
           className="glass-card"
           style={{
-            padding: '10px',
-            maxHeight: '550px',
+            padding: '12px',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '11.5px',
+            lineHeight: '1.5',
+            maxHeight: '480px',
             overflowY: 'auto',
             display: 'flex',
             flexDirection: 'column',
             gap: '6px'
           }}
         >
-          {streamEvents.length === 0 ? (
-            <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
-              No stream events recorded yet.
-            </div>
-          ) : (
-            streamEvents.map((ev) => (
-              <div
-                key={ev.index}
-                style={{
-                  padding: '8px 10px',
-                  background: 'var(--bg-input)',
-                  borderRadius: '6px',
-                  border: '1px solid var(--border-subtle)',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '11.5px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '4px'
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', fontSize: '10.5px' }}>
-                  <span style={{ color: 'var(--accent-cyan)', fontWeight: 600 }}>Chunk #{ev.index}</span>
-                  <span>{ev.eventType}</span>
-                  <span>{new Date(ev.timestamp).toLocaleTimeString()}</span>
-                </div>
-                <div style={{ color: 'var(--text-primary)', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-                  {ev.raw}
-                </div>
+          {streamEvents.map((ev, i) => (
+            <div
+              key={i}
+              style={{
+                padding: '6px 10px',
+                borderRadius: '4px',
+                background: 'rgba(0, 0, 0, 0.25)',
+                borderLeft: '2px solid var(--accent-primary)',
+                wordBreak: 'break-all'
+              }}
+            >
+              <div style={{ color: 'var(--text-muted)', fontSize: '10.5px', marginBottom: '2px' }}>
+                Chunk #{ev.index} &bull; +{ev.timestamp}ms
               </div>
-            ))
-          )}
+              <div style={{ color: 'var(--text-primary)' }}>{ev.raw}</div>
+            </div>
+          ))}
         </div>
+      )}
+
+      {/* Tab 3: Timeline Waterfall */}
+      {activeTab === 'timeline' && (
+        <StreamingTimeline
+          streamEvents={streamEvents}
+          ttfbMs={ttfbMs}
+          totalDurationMs={durationMs}
+        />
       )}
     </div>
   );

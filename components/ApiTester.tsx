@@ -21,7 +21,12 @@ import { EnvironmentManager } from './EnvironmentManager';
 import { SettingsModal } from './SettingsModal';
 import { AmbientBackground } from './AmbientBackground';
 import { ErrorBoundary } from './ErrorBoundary';
+import { ModelArena } from './ModelArena';
+import { PipelineRunner } from './PipelineRunner';
+import { CommandPalette } from './CommandPalette';
 import { executeApiRequest } from '../lib/api/proxy-client';
+import { calculateEstimatedCost } from '../lib/api/pricing';
+import { estimateTokens } from '../lib/api/stream-parser';
 import {
   addHistoryItem,
   getHistoryItems,
@@ -38,13 +43,18 @@ import {
 
 export function ApiTester() {
   // Navigation & Workspace State
-  const [activeTab, setActiveTab] = useState<'playground' | 'history' | 'saved' | 'environments'>('playground');
+  const [activeTab, setActiveTab] = useState<'playground' | 'arena' | 'pipeline' | 'history' | 'saved' | 'environments'>('playground');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [animationMode, setAnimationMode] = useState<'auto' | 'full' | 'reduced' | 'disabled'>('auto');
   const [timeoutSeconds, setTimeoutSeconds] = useState(60);
   const [rememberApiKeys, setRememberApiKeys] = useState(false);
+
+  // Session Totals
+  const [sessionCost, setSessionCost] = useState(0);
+  const [sessionTokens, setSessionTokens] = useState(0);
 
   // Environment State
   const [environments, setEnvironments] = useState<Environment[]>([]);
@@ -77,7 +87,9 @@ export function ApiTester() {
     rawBody: '{\n  "model": "gpt-4o",\n  "messages": [\n    {"role": "user", "content": "Hello!"}\n  ]\n}',
     isStreaming: defaultPreset.isStreaming,
     timeoutSeconds: 60,
-    presetId: defaultPreset.id
+    presetId: defaultPreset.id,
+    executionMode: 'proxy',
+    retryOnFailure: false
   });
 
   // Active Response State
@@ -203,7 +215,7 @@ export function ApiTester() {
     setIsLoading(true);
     setUiState('requesting');
     setResponse(null);
-    setMobileActiveView('response'); // Automatically switch focus to response on phone
+    setMobileActiveView('response'); // Auto-switch focus on phone
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
@@ -245,6 +257,13 @@ export function ApiTester() {
 
       setResponse(result);
       setUiState(result.ok ? 'success' : 'error');
+
+      // Update session totals
+      const outTokens = estimateTokens(typeof result.data === 'object' ? JSON.stringify(result.data) : result.rawText || '');
+      const inTokens = estimateTokens(config.bodyMode === 'raw' ? config.rawBody : config.messages.map(m => m.content).join(' '));
+      const costCalc = calculateEstimatedCost(inTokens, outTokens, config.modelId);
+      setSessionCost((prev) => prev + costCalc.totalCost);
+      setSessionTokens((prev) => prev + inTokens + outTokens);
 
       // Save to History (API Key sanitized)
       const { apiKey, ...safeConfig } = config;
@@ -303,21 +322,29 @@ export function ApiTester() {
     }
   };
 
-  // Keyboard Shortcuts (Ctrl/Cmd + Enter, Esc)
+  // Keyboard Shortcuts (Ctrl/Cmd + Enter, Cmd+K, Esc)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
         handleSendRequest();
       }
-      if (e.key === 'Escape' && (isLoading || isStreamingActive)) {
-        e.preventDefault();
-        handleStopStreaming();
+      if (e.key === 'Escape') {
+        if (isCommandPaletteOpen) {
+          setIsCommandPaletteOpen(false);
+        } else if (isLoading || isStreamingActive) {
+          e.preventDefault();
+          handleStopStreaming();
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [config, isLoading, isStreamingActive, activeEnvironmentId]);
+  }, [config, isLoading, isStreamingActive, activeEnvironmentId, isCommandPaletteOpen]);
 
   // Split Panel Dragging
   const handleMouseDown = () => {
@@ -368,6 +395,9 @@ export function ApiTester() {
         activeTab={activeTab}
         onSelectTab={setActiveTab}
         onToggleMobileDrawer={() => setIsMobileDrawerOpen(!isMobileDrawerOpen)}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+        sessionCost={sessionCost}
+        sessionTokens={sessionTokens}
       />
 
       {/* Main Workspace Frame */}
@@ -387,6 +417,14 @@ export function ApiTester() {
 
         {/* Main Content Area */}
         <main style={{ flex: 1, display: 'flex', flexDirection: 'column', height: 'calc(100dvh - var(--header-height))', overflow: 'hidden' }}>
+          {activeTab === 'arena' && (
+            <ModelArena environment={activeEnv} />
+          )}
+
+          {activeTab === 'pipeline' && (
+            <PipelineRunner environment={activeEnv} />
+          )}
+
           {activeTab === 'history' && (
             <RequestHistory
               historyItems={historyItems}
@@ -530,6 +568,17 @@ export function ApiTester() {
           )}
         </main>
       </div>
+
+      {/* Global Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onSelectPreset={handleApplyPreset}
+        onNavigate={setActiveTab}
+        onToggleTheme={handleToggleTheme}
+        onSendRequest={handleSendRequest}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+      />
 
       {/* Settings Modal */}
       <SettingsModal

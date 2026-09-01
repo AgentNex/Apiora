@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react';
 import { ApiRequestConfig, Environment } from '../lib/api/types';
-import { prepareRequest, generateCurlCommand } from '../lib/api/request-builder';
-import { CopyIcon, CheckIcon, TerminalIcon, ShieldIcon } from './Icons';
+import { prepareRequest } from '../lib/api/request-builder';
+import { generateSnippet, TargetLanguage } from '../lib/api/code-generator';
+import { CopyIcon, CheckIcon, TerminalIcon, ShieldIcon, CodeIcon } from './Icons';
 
 interface RequestPreviewProps {
   config: ApiRequestConfig;
@@ -11,38 +12,26 @@ interface RequestPreviewProps {
 }
 
 export function RequestPreview({ config, environment }: RequestPreviewProps) {
-  const [copiedCurl, setCopiedCurl] = useState(false);
-  const [copiedFetch, setCopiedFetch] = useState(false);
+  const [targetLang, setTargetLang] = useState<TargetLanguage>('curl');
   const [maskSecrets, setMaskSecrets] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   const prepared = prepareRequest(config, environment);
-  const curlCmd = generateCurlCommand(prepared, maskSecrets);
+  const snippet = generateSnippet(config, environment, targetLang, maskSecrets);
 
-  const fetchCode = `fetch("${prepared.url}", {
-  method: "${prepared.method}",
-  headers: ${JSON.stringify(maskSecrets ? prepared.maskedHeaders : prepared.headers, null, 4)},
-  body: ${prepared.body ? JSON.stringify(prepared.body) : 'undefined'}
-});`;
-
-  const handleCopyCurl = () => {
-    navigator.clipboard.writeText(curlCmd);
-    setCopiedCurl(true);
-    setTimeout(() => setCopiedCurl(false), 1500);
-  };
-
-  const handleCopyFetch = () => {
-    navigator.clipboard.writeText(fetchCode);
-    setCopiedFetch(true);
-    setTimeout(() => setCopiedFetch(false), 1500);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(snippet);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      {/* Top Toggle */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      {/* Top Bar */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
-          <TerminalIcon size={15} style={{ color: 'var(--accent-primary)' }} />
-          <span>Compiled Request Preview</span>
+          <CodeIcon size={15} style={{ color: 'var(--accent-primary)' }} />
+          <span>Multi-Language SDK & Code Exporter</span>
         </div>
 
         <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '12px', color: 'var(--text-secondary)' }}>
@@ -51,105 +40,80 @@ export function RequestPreview({ config, environment }: RequestPreviewProps) {
             type="checkbox"
             checked={maskSecrets}
             onChange={(e) => setMaskSecrets(e.target.checked)}
-            style={{ accentColor: 'var(--accent-primary)' }}
+            style={{ accentColor: 'var(--accent-primary)', cursor: 'pointer' }}
           />
-          <span>Mask Sensitive Credentials</span>
+          <span>Mask API Key in Preview</span>
         </label>
       </div>
 
       {/* Target URL & Method */}
-      <div className="glass-card" style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div className="glass-card" style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
         <span className={`forge-badge method-badge-${prepared.method.toLowerCase()}`}>
           {prepared.method}
         </span>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12.5px', color: 'var(--text-primary)', wordBreak: 'break-all' }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--text-primary)', wordBreak: 'break-all' }}>
           {prepared.url}
         </span>
       </div>
 
-      {/* cURL Command Box */}
+      {/* Language Selector Pills */}
+      <div className="touch-pill-row" style={{ padding: '2px 0' }}>
+        {[
+          { id: 'curl', label: 'cURL' },
+          { id: 'python-sdk', label: 'Python (SDK)' },
+          { id: 'python-requests', label: 'Python (Requests)' },
+          { id: 'typescript-sdk', label: 'TypeScript (SDK)' },
+          { id: 'typescript-fetch', label: 'JavaScript (Fetch)' },
+          { id: 'go', label: 'Go (net/http)' },
+          { id: 'rust', label: 'Rust (reqwest)' }
+        ].map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => setTargetLang(item.id as TargetLanguage)}
+            className={`forge-btn ${targetLang === item.id ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
+            style={{ padding: '4px 10px', fontSize: '11.5px', border: '1px solid var(--border-subtle)' }}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Code Snippet Box */}
       <div className="glass-card" style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-            cURL Terminal Command
+            Generated Code ({targetLang})
           </span>
           <button
             type="button"
-            onClick={handleCopyCurl}
+            onClick={handleCopy}
             className="forge-btn forge-btn-ghost"
-            style={{ padding: '3px 8px', fontSize: '11.5px' }}
+            style={{ padding: '4px 10px', fontSize: '11.5px', border: '1px solid var(--border-subtle)' }}
           >
-            {copiedCurl ? <CheckIcon size={13} style={{ color: 'var(--accent-emerald)' }} /> : <CopyIcon size={13} />}
-            <span>{copiedCurl ? 'Copied!' : 'Copy cURL'}</span>
+            {copied ? <CheckIcon size={13} style={{ color: 'var(--accent-emerald)' }} /> : <CopyIcon size={13} />}
+            <span>{copied ? 'Copied to Clipboard!' : 'Copy Code'}</span>
           </button>
         </div>
 
         <pre
           style={{
-            background: 'var(--bg-input)',
-            padding: '10px',
+            background: 'rgba(0, 0, 0, 0.4)',
+            padding: '12px',
             borderRadius: '6px',
             fontFamily: 'var(--font-mono)',
             fontSize: '12px',
+            lineHeight: '1.5',
             overflowX: 'auto',
-            color: '#38bdf8',
+            color: 'var(--text-primary)',
             whiteSpace: 'pre-wrap',
-            wordBreak: 'break-all'
+            wordBreak: 'break-word',
+            border: '1px solid var(--border-subtle)'
           }}
         >
-          {curlCmd}
+          {snippet}
         </pre>
       </div>
-
-      {/* Headers Breakdown */}
-      <div className="glass-card" style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-          Compiled Outbound Headers ({Object.keys(prepared.headers).length})
-        </span>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          {Object.entries(maskSecrets ? prepared.maskedHeaders : prepared.headers).map(([k, v]) => (
-            <div key={k} style={{ display: 'flex', gap: '8px', fontSize: '12px', fontFamily: 'var(--font-mono)' }}>
-              <span style={{ color: 'var(--accent-purple)', fontWeight: 600 }}>{k}:</span>
-              <span style={{ color: 'var(--text-primary)', wordBreak: 'break-all' }}>{v}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Body Payload */}
-      {prepared.body && (
-        <div className="glass-card" style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-              Final Request Body Payload
-            </span>
-            <button
-              type="button"
-              onClick={handleCopyFetch}
-              className="forge-btn forge-btn-ghost"
-              style={{ padding: '3px 8px', fontSize: '11.5px' }}
-            >
-              {copiedFetch ? <CheckIcon size={13} style={{ color: 'var(--accent-emerald)' }} /> : <CopyIcon size={13} />}
-              <span>Copy JS fetch</span>
-            </button>
-          </div>
-
-          <pre
-            style={{
-              background: 'var(--bg-input)',
-              padding: '10px',
-              borderRadius: '6px',
-              fontFamily: 'var(--font-mono)',
-              fontSize: '12px',
-              overflowX: 'auto',
-              color: '#f8fafc',
-              maxHeight: '240px'
-            }}
-          >
-            {prepared.body}
-          </pre>
-        </div>
-      )}
     </div>
   );
 }

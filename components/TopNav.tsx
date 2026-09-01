@@ -11,7 +11,9 @@ import {
   HistoryIcon,
   ShieldIcon,
   CodeIcon,
-  MenuIcon
+  MenuIcon,
+  SparklesIcon,
+  SearchIcon
 } from './Icons';
 import { StatusIndicator } from './StatusIndicator';
 import { Environment } from '../lib/api/types';
@@ -25,9 +27,12 @@ interface TopNavProps {
   onOpenEnvironments: () => void;
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
-  activeTab: 'playground' | 'history' | 'saved' | 'environments';
-  onSelectTab: (tab: 'playground' | 'history' | 'saved' | 'environments') => void;
+  activeTab: 'playground' | 'arena' | 'pipeline' | 'history' | 'saved' | 'environments';
+  onSelectTab: (tab: 'playground' | 'arena' | 'pipeline' | 'history' | 'saved' | 'environments') => void;
   onToggleMobileDrawer?: () => void;
+  onOpenCommandPalette?: () => void;
+  sessionCost?: number;
+  sessionTokens?: number;
 }
 
 export function TopNav({
@@ -41,7 +46,10 @@ export function TopNav({
   onToggleTheme,
   activeTab,
   onSelectTab,
-  onToggleMobileDrawer
+  onToggleMobileDrawer,
+  onOpenCommandPalette,
+  sessionCost = 0,
+  sessionTokens = 0
 }: TopNavProps) {
   const activeEnv = environments.find((e) => e.id === activeEnvironmentId) || environments[0];
 
@@ -99,45 +107,66 @@ export function TopNav({
           </div>
         </div>
 
-        <div className="hidden md:block" style={{ width: '1px', height: '18px', background: 'var(--border-subtle)', margin: '0 2px' }} />
+        <div className="hidden lg:block" style={{ width: '1px', height: '18px', background: 'var(--border-subtle)', margin: '0 2px' }} />
 
-        {/* Desktop Navigation Tabs (Hidden on mobile phone; mobile uses drawer) */}
-        <div className="hidden md:flex" style={{ alignItems: 'center', gap: '4px' }}>
+        {/* Desktop Navigation Tabs */}
+        <div className="hidden lg:flex" style={{ alignItems: 'center', gap: '4px' }}>
           <button
             onClick={() => onSelectTab('playground')}
             className={`forge-btn ${activeTab === 'playground' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
-            style={{ padding: '5px 10px', fontSize: '12px' }}
+            style={{ padding: '5px 9px', fontSize: '12px' }}
           >
             Playground
           </button>
+
+          <button
+            onClick={() => onSelectTab('arena')}
+            className={`forge-btn ${activeTab === 'arena' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
+            style={{ padding: '5px 9px', fontSize: '12px' }}
+          >
+            <SparklesIcon size={13} style={{ color: 'var(--accent-primary)' }} />
+            <span>Arena</span>
+          </button>
+
+          <button
+            onClick={() => onSelectTab('pipeline')}
+            className={`forge-btn ${activeTab === 'pipeline' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
+            style={{ padding: '5px 9px', fontSize: '12px' }}
+          >
+            <span>Pipelines</span>
+          </button>
+
           <button
             onClick={() => onSelectTab('history')}
             className={`forge-btn ${activeTab === 'history' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
-            style={{ padding: '5px 10px', fontSize: '12px' }}
+            style={{ padding: '5px 9px', fontSize: '12px' }}
           >
             <HistoryIcon size={13} />
             <span>History</span>
           </button>
+
           <button
             onClick={() => onSelectTab('saved')}
             className={`forge-btn ${activeTab === 'saved' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
-            style={{ padding: '5px 10px', fontSize: '12px' }}
+            style={{ padding: '5px 9px', fontSize: '12px' }}
           >
             <BookmarkIcon size={13} />
             <span>Saved</span>
           </button>
+
           <button
             onClick={() => onSelectTab('environments')}
             className={`forge-btn ${activeTab === 'environments' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
-            style={{ padding: '5px 10px', fontSize: '12px' }}
+            style={{ padding: '5px 9px', fontSize: '12px' }}
           >
             <ShieldIcon size={13} />
             <span>Environments</span>
           </button>
+
           <a
             href="/docs"
             className="forge-btn forge-btn-ghost"
-            style={{ padding: '5px 10px', fontSize: '12px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--accent-cyan)' }}
+            style={{ padding: '5px 9px', fontSize: '12px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--accent-cyan)' }}
             title="Interactive Documentation"
           >
             <CodeIcon size={13} />
@@ -148,28 +177,53 @@ export function TopNav({
 
       {/* Right Controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        {/* New Request Button */}
+        {/* Command Palette Button */}
         <button
-          onClick={onNewRequest}
-          className="forge-btn"
+          type="button"
+          onClick={onOpenCommandPalette}
+          className="forge-btn forge-btn-ghost"
           style={{
-            padding: '5px 10px',
-            fontSize: '12px',
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-medium)'
+            padding: '5px 9px',
+            fontSize: '11.5px',
+            border: '1px solid var(--border-subtle)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
           }}
-          title="Create a fresh blank request"
+          title="Search commands and presets (Cmd+K / Ctrl+K)"
         >
-          <PlusIcon size={13} style={{ color: 'var(--accent-primary)' }} />
-          <span className="hidden sm:inline">New</span>
+          <SearchIcon size={13} />
+          <span className="hidden sm:inline">Search</span>
+          <kbd style={{ fontSize: '10px', background: 'rgba(255,255,255,0.08)', padding: '1px 4px', borderRadius: '3px' }}>⌘K</kbd>
         </button>
+
+        {/* Running Session Cost Counter */}
+        <div
+          className="hidden xl:flex"
+          style={{
+            alignItems: 'center',
+            gap: '6px',
+            padding: '4px 8px',
+            borderRadius: '6px',
+            background: 'rgba(0,0,0,0.25)',
+            border: '1px solid var(--border-subtle)',
+            fontSize: '11px',
+            fontFamily: 'var(--font-mono)'
+          }}
+          title="Total session usage cost & tokens"
+        >
+          <span style={{ color: 'var(--text-muted)' }}>Session:</span>
+          <strong style={{ color: 'var(--accent-amber)' }}>${sessionCost.toFixed(4)}</strong>
+          <span style={{ color: 'var(--text-faint)' }}>•</span>
+          <span style={{ color: 'var(--accent-cyan)' }}>{sessionTokens} tok</span>
+        </div>
 
         {/* Environment Selector Dropdown */}
         <select
           value={activeEnvironmentId}
           onChange={(e) => onSelectEnvironment(e.target.value)}
           className="forge-select"
-          style={{ padding: '4px 8px', fontSize: '11.5px', maxWidth: '130px' }}
+          style={{ padding: '4px 8px', fontSize: '11.5px', maxWidth: '125px' }}
           title="Select Active Environment"
         >
           {environments.map((env) => (

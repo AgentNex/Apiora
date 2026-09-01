@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { ApiResponseData } from '../lib/api/types';
 import { JsonTreeView } from './JsonTreeView';
 import { StreamViewer } from './StreamViewer';
+import { AssertionsRunner } from './AssertionsRunner';
 import {
   CopyIcon,
   CheckIcon,
@@ -12,7 +13,8 @@ import {
   BracesIcon,
   FileTextIcon,
   InfoIcon,
-  CodeIcon
+  CodeIcon,
+  SparklesIcon
 } from './Icons';
 
 interface ResponsePanelProps {
@@ -22,7 +24,7 @@ interface ResponsePanelProps {
   onStopStreaming: () => void;
 }
 
-type ResponseTab = 'pretty' | 'raw' | 'tree' | 'headers' | 'stream' | 'diagnostics';
+type ResponseTab = 'pretty' | 'raw' | 'tree' | 'headers' | 'stream' | 'assertions' | 'diagnostics';
 
 export function ResponsePanel({
   response,
@@ -279,6 +281,16 @@ export function ResponsePanel({
 
         <button
           type="button"
+          onClick={() => setActiveTab('assertions')}
+          className={`forge-btn ${activeTab === 'assertions' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
+          style={{ padding: '3px 9px', fontSize: '11.5px' }}
+        >
+          <SparklesIcon size={12} style={{ color: 'var(--accent-emerald)' }} />
+          <span>Assertions</span>
+        </button>
+
+        <button
+          type="button"
           onClick={() => setActiveTab('headers')}
           className={`forge-btn ${activeTab === 'headers' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
           style={{ padding: '3px 9px', fontSize: '11.5px' }}
@@ -359,7 +371,12 @@ export function ResponsePanel({
           />
         )}
 
-        {/* Tab 5: Headers */}
+        {/* Tab 5: Assertions Suite */}
+        {activeTab === 'assertions' && (
+          <AssertionsRunner response={response} />
+        )}
+
+        {/* Tab 6: Headers */}
         {activeTab === 'headers' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
@@ -386,7 +403,7 @@ export function ResponsePanel({
           </div>
         )}
 
-        {/* Tab 6: Diagnostics */}
+        {/* Tab 7: Diagnostics */}
         {activeTab === 'diagnostics' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div className="glass-card" style={{ padding: '14px' }}>

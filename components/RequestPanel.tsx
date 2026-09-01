@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { ApiRequestConfig, Environment, ProviderPreset } from '../lib/api/types';
 import { PROVIDER_PRESETS } from '../lib/api/presets';
+import { calculateEstimatedCost } from '../lib/api/pricing';
+import { estimateTokens } from '../lib/api/stream-parser';
 import { EndpointInput } from './EndpointInput';
 import { ProviderPresetSelector } from './ProviderPresetSelector';
 import { ModelInput } from './ModelInput';
@@ -12,6 +14,7 @@ import { ParameterEditor } from './ParameterEditor';
 import { MessageEditor } from './MessageEditor';
 import { RawJsonEditor } from './RawJsonEditor';
 import { RequestPreview } from './RequestPreview';
+import { PromptVersioning } from './PromptVersioning';
 import {
   PlayIcon,
   StopIcon,
@@ -38,8 +41,7 @@ interface RequestPanelProps {
   isStreamingActive: boolean;
 }
 
-type WorkspaceMode = 'matrix' | 'raw';
-type RequestTab = 'messages' | 'raw' | 'headers' | 'params' | 'auth' | 'preview';
+type TabType = 'messages' | 'raw' | 'params' | 'headers' | 'auth' | 'preview';
 
 export function RequestPanel({
   config,
@@ -51,68 +53,54 @@ export function RequestPanel({
   isLoading,
   isStreamingActive
 }: RequestPanelProps) {
-  const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>(
+  // Sync workspace mode with bodyMode
+  const [workspaceMode, setWorkspaceMode] = useState<'matrix' | 'raw'>(
     config.bodyMode === 'raw' ? 'raw' : 'matrix'
   );
-  const [activeTab, setActiveTab] = useState<RequestTab>(
-    config.bodyMode === 'raw' ? 'raw' : 'messages'
-  );
+  const [activeTab, setActiveTab] = useState<TabType>(config.bodyMode === 'raw' ? 'raw' : 'messages');
   const [isQuickPresetOpen, setIsQuickPresetOpen] = useState(false);
-  const [quickPresetSuccess, setQuickPresetSuccess] = useState<string | null>(null);
+  const [showPromptVersioning, setShowPromptVersioning] = useState(false);
 
-  // Quick preset application for Raw REST mode
+  // Live Token & Cost Estimation
+  const fullPromptText =
+    workspaceMode === 'matrix'
+      ? config.messages.map((m) => m.content).join('\n')
+      : config.rawBody;
+  const inputTokenEstimate = estimateTokens(fullPromptText);
+  const costEstimate = calculateEstimatedCost(inputTokenEstimate, 0, config.modelId);
+
+  // Switch between Prompt Matrix and Raw JSON / REST Mode
+  const handleSwitchWorkspaceMode = (mode: 'matrix' | 'raw') => {
+    setWorkspaceMode(mode);
+    if (mode === 'raw') {
+      setActiveTab('raw');
+      onChangeConfig((prev) => ({
+        ...prev,
+        bodyMode: 'raw'
+      }));
+    } else {
+      setActiveTab('messages');
+      onChangeConfig((prev) => ({
+        ...prev,
+        bodyMode: 'builder'
+      }));
+    }
+  };
+
+  // Quick Preset Selection in Raw REST Mode
   const handleSelectRawPreset = (preset: ProviderPreset) => {
     onApplyPreset(preset);
-    if (preset.defaultRawBody) {
-      onChangeConfig((prev) => ({
-        ...prev,
-        rawBody: preset.defaultRawBody || prev.rawBody,
-        bodyMode: 'raw'
-      }));
-    } else {
-      // Generate sample JSON from messages if defaultRawBody is empty
-      const sample = JSON.stringify(
-        {
-          model: preset.defaultModel,
-          messages: preset.defaultMessages.map((m) => ({ role: m.role, content: m.content })),
-          ...(preset.defaultParameters || {})
-        },
-        null,
-        2
-      );
-      onChangeConfig((prev) => ({
-        ...prev,
-        rawBody: sample,
-        bodyMode: 'raw'
-      }));
-    }
     setIsQuickPresetOpen(false);
-    setQuickPresetSuccess(preset.name);
-    setTimeout(() => setQuickPresetSuccess(null), 2500);
   };
 
-  // Toggle between Prompt Matrix and Raw REST mode
-  const handleSwitchWorkspaceMode = (mode: WorkspaceMode) => {
-    setWorkspaceMode(mode);
-    if (mode === 'matrix') {
-      onChangeConfig((prev) => ({ ...prev, bodyMode: 'builder' }));
-      setActiveTab('messages');
-    } else {
-      onChangeConfig((prev) => ({ ...prev, bodyMode: 'raw' }));
-      setActiveTab('raw');
-    }
-  };
-
-  // Quick add header helper in Raw REST mode
+  // Quick Add Header Helper
   const handleQuickAddHeader = (key: string, value: string) => {
     onChangeConfig((prev) => {
-      const exists = prev.headers.some((h) => h.key.toLowerCase() === key.toLowerCase());
-      if (exists) {
+      const existing = prev.headers.find((h) => h.key.toLowerCase() === key.toLowerCase());
+      if (existing) {
         return {
           ...prev,
-          headers: prev.headers.map((h) =>
-            h.key.toLowerCase() === key.toLowerCase() ? { ...h, value, enabled: true } : h
-          )
+          headers: prev.headers.map((h) => (h.id === existing.id ? { ...h, value, enabled: true } : h))
         };
       }
       return {
@@ -143,7 +131,7 @@ export function RequestPanel({
           background: 'rgba(0, 0, 0, 0.2)'
         }}
       >
-        {/* Top Header Row: Mode Switcher + Send Button */}
+        {/* Top Header Row: Mode Switcher + Send Button + Live Cost */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
           {/* Workspace Mode Segmented Control */}
           <div
@@ -204,11 +192,24 @@ export function RequestPanel({
             </button>
           </div>
 
-          {/* Action Area: Send / Stop Stream */}
+          {/* Action Area: Send / Stop Stream + Token Cost Calculator */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }} className="hidden sm:inline">
-              <strong>Ctrl + Enter</strong>
-            </span>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '3px 8px',
+                borderRadius: '5px',
+                background: 'rgba(255,255,255,0.05)',
+                fontSize: '11px',
+                fontFamily: 'var(--font-mono)'
+              }}
+              title="Live token count and estimated cost before execution"
+            >
+              <span style={{ color: 'var(--accent-cyan)' }}>~{inputTokenEstimate} tok</span>
+              <span style={{ color: 'var(--text-muted)' }}>({costEstimate.formattedTotal})</span>
+            </div>
 
             {isLoading || isStreamingActive ? (
               <button
@@ -268,210 +269,120 @@ export function RequestPanel({
                 className="forge-btn"
                 style={{
                   background: 'var(--bg-card)',
-                  border: '1px solid var(--border-accent)',
-                  padding: '7px 12px',
+                  border: '1px solid var(--border-medium)',
+                  padding: '6px 12px',
+                  fontSize: '12px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px'
+                  gap: '6px'
                 }}
-                title="Populate Speechmatics, Deepgram, Groq Whisper, and other REST endpoints"
               >
-                <SparklesIcon size={14} style={{ color: 'var(--accent-cyan)' }} />
-                <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '12.5px' }}>
-                  Quick Presets
-                </span>
-                <ChevronDownIcon size={13} style={{ color: 'var(--text-muted)' }} />
+                <SparklesIcon size={13} style={{ color: 'var(--accent-cyan)' }} />
+                <span>Insert Provider Preset Payload</span>
+                <ChevronDownIcon size={12} />
               </button>
 
               {isQuickPresetOpen && (
-                <>
-                  <div
-                    onClick={() => setIsQuickPresetOpen(false)}
-                    style={{ position: 'fixed', inset: 0, zIndex: 40 }}
-                  />
-                  <div
-                    className="glass-panel"
-                    style={{
-                      position: 'absolute',
-                      top: 'calc(100% + 6px)',
-                      right: 0,
-                      width: '360px',
-                      maxHeight: '420px',
-                      overflowY: 'auto',
-                      padding: '8px',
-                      zIndex: 50,
-                      boxShadow: '0 12px 36px rgba(0, 0, 0, 0.55)'
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        color: 'var(--accent-cyan)',
-                        padding: '4px 8px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em'
-                      }}
-                    >
-                      ⚡ Quick REST & Speech Presets
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>
-                      {PROVIDER_PRESETS.map((preset) => {
-                        const isSelected = preset.id === config.presetId;
-                        const isAudio = preset.category === 'Speech & Audio';
-
-                        return (
-                          <button
-                            key={preset.id}
-                            type="button"
-                            onClick={() => handleSelectRawPreset(preset)}
-                            style={{
-                              display: 'flex',
-                              flexDirection: 'column',
-                              gap: '2px',
-                              padding: '8px 10px',
-                              borderRadius: '6px',
-                              border: isSelected ? '1px solid var(--border-accent)' : '1px solid transparent',
-                              background: isSelected
-                                ? 'rgba(6, 182, 212, 0.15)'
-                                : isAudio
-                                ? 'rgba(99, 102, 241, 0.08)'
-                                : 'transparent',
-                              cursor: 'pointer',
-                              textAlign: 'left',
-                              transition: 'background 0.12s ease'
-                            }}
-                            onMouseEnter={(e) => {
-                              if (!isSelected) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                            }}
-                            onMouseLeave={(e) => {
-                              if (!isSelected)
-                                e.currentTarget.style.background = isAudio
-                                  ? 'rgba(99, 102, 241, 0.08)'
-                                  : 'transparent';
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                              <span style={{ fontSize: '13px', fontWeight: 600, color: isAudio ? 'var(--accent-cyan)' : 'var(--text-primary)' }}>
-                                {preset.name}
-                              </span>
-                              {isAudio && (
-                                <span
-                                  style={{
-                                    fontSize: '9.5px',
-                                    padding: '1px 5px',
-                                    borderRadius: '4px',
-                                    background: 'rgba(6, 182, 212, 0.2)',
-                                    color: 'var(--accent-cyan)',
-                                    fontWeight: 700
-                                  }}
-                                >
-                                  AUDIO/STT
-                                </span>
-                              )}
-                            </div>
-                            <span style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: '1.3' }}>
-                              {preset.description}
-                            </span>
-                            <span style={{ fontSize: '10.5px', color: 'var(--text-faint)', fontFamily: 'var(--font-mono)', marginTop: '2px' }}>
-                              {preset.defaultMethod} {preset.endpointTemplate.split('?')[0]}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 4px)',
+                    right: 0,
+                    width: '320px',
+                    maxHeight: '380px',
+                    overflowY: 'auto',
+                    background: 'var(--bg-surface-elevated)',
+                    border: '1px solid var(--border-medium)',
+                    borderRadius: '8px',
+                    boxShadow: '0 12px 32px rgba(0, 0, 0, 0.4)',
+                    zIndex: 50,
+                    padding: '6px'
+                  }}
+                >
+                  <div style={{ padding: '6px 10px', fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Select Schema Template
                   </div>
-                </>
+                  {PROVIDER_PRESETS.map((preset) => (
+                    <div
+                      key={preset.id}
+                      onClick={() => handleSelectRawPreset(preset)}
+                      style={{
+                        padding: '8px 10px',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '2px'
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                          {preset.name}
+                        </span>
+                        <span className={`forge-badge method-badge-${preset.defaultMethod.toLowerCase()}`} style={{ fontSize: '9px', padding: '1px 4px' }}>
+                          {preset.defaultMethod}
+                        </span>
+                      </div>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        {preset.provider || preset.name} &bull; {preset.defaultModel}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           )}
         </div>
-
-        {/* Quick preset loaded alert */}
-        {quickPresetSuccess && (
-          <div
-            style={{
-              fontSize: '11.5px',
-              padding: '6px 10px',
-              borderRadius: '6px',
-              background: 'rgba(6, 182, 212, 0.12)',
-              border: '1px solid rgba(6, 182, 212, 0.3)',
-              color: 'var(--accent-cyan)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            <CheckIcon size={13} />
-            <span>Loaded preset <strong>{quickPresetSuccess}</strong> (endpoint, headers, and JSON body populated).</span>
-          </div>
-        )}
       </div>
 
-      {/* Sub-Navigation Tabs */}
+      {/* Navigation Sub-Tabs Bar (Horizontally scrollable touch pills) */}
       <div
+        className="touch-pill-row"
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
-          padding: '6px 12px',
+          padding: '6px 14px',
           borderBottom: '1px solid var(--border-subtle)',
-          background: 'var(--bg-surface)',
-          overflowX: 'auto'
+          background: 'var(--bg-surface)'
         }}
       >
         {workspaceMode === 'matrix' ? (
-          <>
-            <button
-              type="button"
-              onClick={() => setActiveTab('messages')}
-              className={`forge-btn ${activeTab === 'messages' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
-              style={{ padding: '4px 10px', fontSize: '12px' }}
-            >
-              <CodeIcon size={13} />
-              <span>Prompt Matrix ({config.messages.length})</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('params')}
-              className={`forge-btn ${activeTab === 'params' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
-              style={{ padding: '4px 10px', fontSize: '12px' }}
-            >
-              <SlidersIcon size={13} />
-              <span>Parameters</span>
-            </button>
-          </>
+          <button
+            type="button"
+            onClick={() => setActiveTab('messages')}
+            className={`forge-btn ${activeTab === 'messages' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
+            style={{ padding: '5px 12px', fontSize: '12px' }}
+          >
+            <CodeIcon size={13} />
+            <span>Messages ({config.messages.length})</span>
+          </button>
         ) : (
-          <>
-            <button
-              type="button"
-              onClick={() => setActiveTab('raw')}
-              className={`forge-btn ${activeTab === 'raw' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
-              style={{ padding: '4px 10px', fontSize: '12px' }}
-            >
-              <BracesIcon size={13} />
-              <span>JSON Payload</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('params')}
-              className={`forge-btn ${activeTab === 'params' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
-              style={{ padding: '4px 10px', fontSize: '12px' }}
-            >
-              <SlidersIcon size={13} />
-              <span>Query Params</span>
-            </button>
-          </>
+          <button
+            type="button"
+            onClick={() => setActiveTab('raw')}
+            className={`forge-btn ${activeTab === 'raw' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
+            style={{ padding: '5px 12px', fontSize: '12px' }}
+          >
+            <BracesIcon size={13} />
+            <span>Raw JSON Body</span>
+          </button>
         )}
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('params')}
+          className={`forge-btn ${activeTab === 'params' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
+          style={{ padding: '5px 12px', fontSize: '12px' }}
+        >
+          <SlidersIcon size={13} />
+          <span>Parameters</span>
+        </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('headers')}
           className={`forge-btn ${activeTab === 'headers' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
-          style={{ padding: '4px 10px', fontSize: '12px' }}
+          style={{ padding: '5px 12px', fontSize: '12px' }}
         >
           <LayersIcon size={13} />
           <span>Headers ({config.headers.filter((h) => h.enabled).length})</span>
@@ -481,20 +392,20 @@ export function RequestPanel({
           type="button"
           onClick={() => setActiveTab('auth')}
           className={`forge-btn ${activeTab === 'auth' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
-          style={{ padding: '4px 10px', fontSize: '12px' }}
+          style={{ padding: '5px 12px', fontSize: '12px' }}
         >
           <KeyIcon size={13} />
-          <span>Auth</span>
+          <span>Auth & Proxy</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('preview')}
           className={`forge-btn ${activeTab === 'preview' ? 'forge-btn-primary' : 'forge-btn-ghost'}`}
-          style={{ padding: '4px 10px', fontSize: '12px' }}
+          style={{ padding: '5px 12px', fontSize: '12px' }}
         >
           <TerminalIcon size={13} />
-          <span>cURL Preview</span>
+          <span>Code & SDK</span>
         </button>
       </div>
 
@@ -503,17 +414,43 @@ export function RequestPanel({
         {/* Prompt Matrix (Multi-turn messages) */}
         {activeTab === 'messages' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: 'var(--text-secondary)' }}>
-              <span>Mode: Structured AI Prompt Matrix</span>
-              <button
-                type="button"
-                onClick={() => handleSwitchWorkspaceMode('raw')}
-                className="forge-btn forge-btn-ghost"
-                style={{ padding: '3px 8px', fontSize: '11.5px', color: 'var(--accent-cyan)' }}
-              >
-                Switch to Raw JSON / REST →
-              </button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+              <span>Structured Multi-Turn AI Prompt Matrix</span>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowPromptVersioning(!showPromptVersioning)}
+                  className="forge-btn forge-btn-ghost"
+                  style={{ padding: '3px 8px', fontSize: '11.5px', border: '1px solid var(--border-subtle)' }}
+                >
+                  <SparklesIcon size={12} style={{ color: 'var(--accent-primary)' }} />
+                  <span>{showPromptVersioning ? 'Hide Version Diff' : 'Prompt Versions & Diff'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSwitchWorkspaceMode('raw')}
+                  className="forge-btn forge-btn-ghost"
+                  style={{ padding: '3px 8px', fontSize: '11.5px', color: 'var(--accent-cyan)' }}
+                >
+                  Switch to Raw JSON →
+                </button>
+              </div>
             </div>
+
+            {/* Collapsible Prompt Versioning Box */}
+            {showPromptVersioning && (
+              <PromptVersioning
+                currentContent={fullPromptText}
+                onRestoreVersion={(content) => {
+                  onChangeConfig((prev) => ({
+                    ...prev,
+                    messages: [{ id: `msg_${Date.now()}`, role: 'user', content }]
+                  }));
+                }}
+              />
+            )}
+
             <MessageEditor
               messages={config.messages}
               onChangeMessages={(messages) => onChangeConfig((prev) => ({ ...prev, messages }))}
@@ -521,86 +458,17 @@ export function RequestPanel({
           </div>
         )}
 
-        {/* Raw JSON / REST Payload Editor with Auto-Formatting and Direct Headers */}
+        {/* Raw JSON / REST Payload Editor */}
         {activeTab === 'raw' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {/* Direct Headers Bar in Raw REST Mode */}
-            <div
-              className="glass-card"
-              style={{
-                padding: '10px 12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: '8px'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                <LayersIcon size={13} style={{ color: 'var(--accent-primary)' }} />
-                <span>Direct Headers:</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-                  {config.headers.filter((h) => h.enabled).slice(0, 3).map((h) => (
-                    <span
-                      key={h.id}
-                      style={{
-                        fontSize: '11px',
-                        padding: '1px 6px',
-                        borderRadius: '4px',
-                        background: 'rgba(255, 255, 255, 0.08)',
-                        color: 'var(--text-primary)',
-                        fontFamily: 'var(--font-mono)'
-                      }}
-                    >
-                      {h.key}
-                    </span>
-                  ))}
-                  {config.headers.filter((h) => h.enabled).length > 3 && (
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                      +{config.headers.filter((h) => h.enabled).length - 3} more
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Direct Header Quick Actions */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <button
-                  type="button"
-                  onClick={() => handleQuickAddHeader('Content-Type', 'application/json')}
-                  className="forge-btn forge-btn-ghost"
-                  style={{ padding: '3px 7px', fontSize: '11px', border: '1px solid var(--border-subtle)' }}
-                >
-                  + Content-Type: json
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleQuickAddHeader('Accept', 'application/json')}
-                  className="forge-btn forge-btn-ghost"
-                  style={{ padding: '3px 7px', fontSize: '11px', border: '1px solid var(--border-subtle)' }}
-                >
-                  + Accept: json
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('headers')}
-                  className="forge-btn forge-btn-ghost"
-                  style={{ padding: '3px 7px', fontSize: '11px', color: 'var(--accent-primary)' }}
-                >
-                  Manage All Headers →
-                </button>
-              </div>
-            </div>
-
-            {/* Streamlined JSON Editor */}
             <RawJsonEditor
               value={config.rawBody}
-              onChange={(rawBody) => onChangeConfig((prev) => ({ ...prev, rawBody, bodyMode: 'raw' }))}
+              onChange={(rawBody) => onChangeConfig((prev) => ({ ...prev, rawBody }))}
             />
           </div>
         )}
 
-        {/* Parameters & Query Params */}
+        {/* Inference & Hyperparameters */}
         {activeTab === 'params' && (
           <ParameterEditor
             queryParams={config.queryParams}
@@ -640,7 +508,7 @@ export function RequestPanel({
           />
         )}
 
-        {/* cURL and Fetch Preview */}
+        {/* cURL and Multi-Language Code Preview */}
         {activeTab === 'preview' && (
           <RequestPreview config={config} environment={environment} />
         )}
